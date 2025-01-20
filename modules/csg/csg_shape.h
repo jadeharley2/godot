@@ -39,6 +39,9 @@
 
 #include "thirdparty/misc/mikktspace.h"
 
+class NavigationMesh;
+class NavigationMeshSourceGeometryData3D;
+
 class CSGShape3D : public GeometryInstance3D {
 	GDCLASS(CSGShape3D, GeometryInstance3D);
 
@@ -119,6 +122,7 @@ protected:
 	void _notification(int p_what);
 	virtual CSGBrush *_build_brush() = 0;
 	void _make_dirty(bool p_parent_removing = false);
+	PackedStringArray get_configuration_warnings() const override;
 
 	static void _bind_methods();
 
@@ -155,8 +159,10 @@ public:
 	void set_collision_priority(real_t p_priority);
 	real_t get_collision_priority() const;
 
+#ifndef DISABLE_DEPRECATED
 	void set_snap(float p_snap);
 	float get_snap() const;
+#endif // DISABLE_DEPRECATED
 
 	void set_calculate_tangents(bool p_calculate_tangents);
 	bool is_calculating_tangents() const;
@@ -165,6 +171,16 @@ public:
 
 	Ref<ArrayMesh> bake_static_mesh();
 	Ref<ConcavePolygonShape3D> bake_collision_shape();
+
+	virtual Ref<TriangleMesh> generate_triangle_mesh() const override;
+
+private:
+	static Callable _navmesh_source_geometry_parsing_callback;
+	static RID _navmesh_source_geometry_parser;
+
+public:
+	static void navmesh_parse_init();
+	static void navmesh_parse_source_geometry(const Ref<NavigationMesh> &p_navigation_mesh, Ref<NavigationMeshSourceGeometryData3D> p_source_geometry_data, Node *p_node);
 
 	CSGShape3D();
 	~CSGShape3D();
