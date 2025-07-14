@@ -1040,7 +1040,7 @@ hvec4 fog_process(vec3 vertex) {
 
 		float vfog_amount = 1.0 - exp(min(0.0, y_dist * scene_data_block.data.fog_height_density));
 
-		fog_amount = max(vfog_amount, fog_amount);
+		fog_amount = min(vfog_amount, fog_amount);
 	}
 
 	return hvec4(fog_color, fog_amount);
