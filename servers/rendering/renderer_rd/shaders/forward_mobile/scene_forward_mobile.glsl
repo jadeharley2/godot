@@ -997,8 +997,13 @@ hvec4 fog_process(vec3 vertex) {
 	if (sc_use_fog_aerial_perspective()) {
 		vec3 sky_fog_color = vec3(0.0);
 		vec3 cube_view = scene_data_block.data.radiance_inverse_xform * vertex;
-		// mip_level always reads from the second mipmap and higher so the fog is always slightly blurred
-		float mip_level = mix(1.0 / MAX_ROUGHNESS_LOD, 1.0, 1.0 - (abs(vertex.z) - scene_data_block.data.z_near) / (scene_data_block.data.z_far - scene_data_block.data.z_near));
+		// With depth fog, aerial perspective doesn't read mipmaps so the fog is not blurred
+		// (and is suitable for open world fog fading).
+		float mip_level = 0.0;
+		if (!sc_use_depth_fog) {
+			// With exponential fog, mip_level always reads from the second mipmap and higher so the fog is always slightly blurred.
+			mip_level = mix(1.0 / MAX_ROUGHNESS_LOD, 1.0, 1.0 - (abs(vertex.z) - scene_data_block.data.z_near) / (scene_data_block.data.z_far - scene_data_block.data.z_near));
+		}
 #ifdef USE_RADIANCE_CUBEMAP_ARRAY
 		float lod, blend;
 		blend = modf(mip_level * MAX_ROUGHNESS_LOD, lod);
