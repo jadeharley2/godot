@@ -113,6 +113,15 @@ bool SpringBoneSimulator3D::_set(const StringName &p_path, const Variant &p_valu
 			} else {
 				return false;
 			}
+		} else if (what == "inertia") {
+			String opt = path.get_slicec('/', 3);
+			if (opt == "value") {
+				set_inertia(which, p_value);
+			} else if (opt == "damping_curve") {
+				set_inertia_damping_curve(which, p_value);
+			} else {
+				return false;
+			}
 		} else if (what == "enable_all_child_collisions") {
 			set_enable_all_child_collisions(which, p_value);
 		} else if (what == "joint_count") {
@@ -138,6 +147,8 @@ bool SpringBoneSimulator3D::_set(const StringName &p_path, const Variant &p_valu
 				set_joint_gravity(which, idx, p_value);
 			} else if (prop == "gravity_direction") {
 				set_joint_gravity_direction(which, idx, p_value);
+			} else if (prop == "inertia") {
+				set_joint_inertia(which, idx, p_value);
 			} else {
 				return false;
 			}
@@ -237,6 +248,15 @@ bool SpringBoneSimulator3D::_get(const StringName &p_path, Variant &r_ret) const
 			} else {
 				return false;
 			}
+		} else if (what == "inertia") {
+			String opt = path.get_slicec('/', 3);
+			if (opt == "value") {
+				r_ret = get_inertia(which);
+			} else if (opt == "damping_curve") {
+				r_ret = get_inertia_damping_curve(which);
+			} else {
+				return false;
+			}
 		} else if (what == "enable_all_child_collisions") {
 			r_ret = are_all_child_collisions_enabled(which);
 		} else if (what == "joint_count") {
@@ -262,6 +282,8 @@ bool SpringBoneSimulator3D::_get(const StringName &p_path, Variant &r_ret) const
 				r_ret = get_joint_gravity(which, idx);
 			} else if (prop == "gravity_direction") {
 				r_ret = get_joint_gravity_direction(which, idx);
+			} else if (prop == "inertia") {
+				r_ret = get_joint_inertia(which, idx);
 			} else {
 				return false;
 			}
@@ -316,6 +338,8 @@ void SpringBoneSimulator3D::_get_property_list(List<PropertyInfo> *p_list) const
 		props.push_back(PropertyInfo(Variant::FLOAT, path + "gravity/value", PROPERTY_HINT_RANGE, "0,1,0.01,or_greater,or_less,suffix:m/s"));
 		props.push_back(PropertyInfo(Variant::OBJECT, path + "gravity/damping_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve"));
 		props.push_back(PropertyInfo(Variant::VECTOR3, path + "gravity/direction"));
+		props.push_back(PropertyInfo(Variant::FLOAT, path + "inertia/value", PROPERTY_HINT_RANGE, "0,1,0.01"));
+		props.push_back(PropertyInfo(Variant::OBJECT, path + "inertia/damping_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve"));
 		props.push_back(PropertyInfo(Variant::INT, path + "joint_count", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_ARRAY, "Joints," + path + "joints/,static,const"));
 		for (int j = 0; j < settings[i]->joints.size(); j++) {
 			String joint_path = path + "joints/" + itos(j) + "/";
@@ -327,6 +351,7 @@ void SpringBoneSimulator3D::_get_property_list(List<PropertyInfo> *p_list) const
 			props.push_back(PropertyInfo(Variant::FLOAT, joint_path + "stiffness", PROPERTY_HINT_RANGE, "0,4,0.01,or_greater"));
 			props.push_back(PropertyInfo(Variant::FLOAT, joint_path + "drag", PROPERTY_HINT_RANGE, "0,1,0.01,or_greater"));
 			props.push_back(PropertyInfo(Variant::FLOAT, joint_path + "gravity", PROPERTY_HINT_RANGE, "0,1,0.01,or_greater,or_less,suffix:m/s"));
+			props.push_back(PropertyInfo(Variant::FLOAT, joint_path + "inertia", PROPERTY_HINT_RANGE, "0,1,0.01"));
 			props.push_back(PropertyInfo(Variant::VECTOR3, joint_path + "gravity_direction"));
 		}
 		props.push_back(PropertyInfo(Variant::BOOL, path + "enable_all_child_collisions"));
@@ -371,6 +396,7 @@ void SpringBoneSimulator3D::_validate_dynamic_prop(PropertyInfo &p_property) con
 			if (split[2] == "rotation_axis" || split[2] == "rotation_axis_vector" || split[2] == "radius" || split[2] == "radius_damping_curve" ||
 					split[2] == "stiffness" || split[2] == "stiffness_damping_curve" ||
 					split[2] == "drag" || split[2] == "drag_damping_curve" ||
+					split[2] == "inertia" || split[2] == "inertia_damping_curve" ||
 					split[2] == "gravity" || split[2] == "gravity_damping_curve" || split[2] == "gravity_direction") {
 				p_property.usage = PROPERTY_USAGE_NONE;
 			}
@@ -774,6 +800,46 @@ Vector3 SpringBoneSimulator3D::get_gravity_direction(int p_index) const {
 	return settings[p_index]->gravity_direction;
 }
 
+
+
+
+void SpringBoneSimulator3D::set_inertia(int p_index, float p_inertia) {
+	ERR_FAIL_INDEX(p_index, settings.size());
+	if (is_config_individual(p_index)) {
+		return; // Joint config is individual mode.
+	}
+	settings[p_index]->inertia = p_inertia;
+	_make_joints_dirty(p_index);
+}
+
+float SpringBoneSimulator3D::get_inertia(int p_index) const {
+	ERR_FAIL_INDEX_V(p_index, settings.size(), 0);
+	return settings[p_index]->inertia;
+}
+
+void SpringBoneSimulator3D::set_inertia_damping_curve(int p_index, const Ref<Curve> &p_damping_curve) {
+	ERR_FAIL_INDEX(p_index, settings.size());
+	if (is_config_individual(p_index)) {
+		return; // Joint config is individual mode.
+	}
+	if (settings[p_index]->inertia_damping_curve.is_valid()) {
+		settings[p_index]->inertia_damping_curve->disconnect_changed(callable_mp(this, &SpringBoneSimulator3D::_make_joints_dirty));
+	}
+	settings[p_index]->inertia_damping_curve = p_damping_curve;
+	if (settings[p_index]->inertia_damping_curve.is_valid()) {
+		settings[p_index]->inertia_damping_curve->connect_changed(callable_mp(this, &SpringBoneSimulator3D::_make_joints_dirty).bind(p_index));
+	}
+	_make_joints_dirty(p_index);
+}
+
+Ref<Curve> SpringBoneSimulator3D::get_inertia_damping_curve(int p_index) const {
+	ERR_FAIL_INDEX_V(p_index, settings.size(), Ref<Curve>());
+	return settings[p_index]->inertia_damping_curve;
+}
+
+
+
+
 void SpringBoneSimulator3D::set_rotation_axis(int p_index, RotationAxis p_axis) {
 	ERR_FAIL_INDEX(p_index, settings.size());
 	if (is_config_individual(p_index)) {
@@ -990,6 +1056,23 @@ Vector3 SpringBoneSimulator3D::get_joint_gravity_direction(int p_index, int p_jo
 	Vector<SpringBone3DJointSetting *> joints = settings[p_index]->joints;
 	ERR_FAIL_INDEX_V(p_joint, joints.size(), Vector3(0, -1, 0));
 	return joints[p_joint]->gravity_direction;
+}
+
+void SpringBoneSimulator3D::set_joint_inertia(int p_index, int p_joint, float p_inertia) {
+	ERR_FAIL_INDEX(p_index, settings.size());
+	if (!is_config_individual(p_index)) {
+		return; // Joints are read-only.
+	}
+	Vector<SpringBone3DJointSetting *> &joints = settings[p_index]->joints;
+	ERR_FAIL_INDEX(p_joint, joints.size());
+	joints[p_joint]->inertia = p_inertia;
+}
+
+float SpringBoneSimulator3D::get_joint_inertia(int p_index, int p_joint) const {
+	ERR_FAIL_INDEX_V(p_index, settings.size(), 0);
+	Vector<SpringBone3DJointSetting *> joints = settings[p_index]->joints;
+	ERR_FAIL_INDEX_V(p_joint, joints.size(), 0);
+	return joints[p_joint]->inertia;
 }
 
 void SpringBoneSimulator3D::set_joint_rotation_axis(int p_index, int p_joint, RotationAxis p_axis) {
@@ -1285,6 +1368,8 @@ void SpringBoneSimulator3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_joint_gravity", "index", "joint"), &SpringBoneSimulator3D::get_joint_gravity);
 	ClassDB::bind_method(D_METHOD("set_joint_gravity_direction", "index", "joint", "gravity_direction"), &SpringBoneSimulator3D::set_joint_gravity_direction);
 	ClassDB::bind_method(D_METHOD("get_joint_gravity_direction", "index", "joint"), &SpringBoneSimulator3D::get_joint_gravity_direction);
+	ClassDB::bind_method(D_METHOD("set_joint_inertia", "index", "joint", "inertia"), &SpringBoneSimulator3D::set_joint_inertia);
+	ClassDB::bind_method(D_METHOD("get_joint_inertia", "index", "joint"), &SpringBoneSimulator3D::get_joint_inertia);
 
 	ClassDB::bind_method(D_METHOD("get_joint_count", "index"), &SpringBoneSimulator3D::get_joint_count);
 
@@ -1595,6 +1680,12 @@ void SpringBoneSimulator3D::_update_joints() {
 				joints[j]->gravity = settings[i]->gravity;
 			}
 
+			if (settings[i]->inertia_damping_curve.is_valid()) {
+				joints[j]->inertia = settings[i]->inertia * settings[i]->inertia_damping_curve->sample_baked(offset);
+			} else {
+				joints[j]->inertia = settings[i]->inertia;
+			}
+
 			joints[j]->gravity_direction = settings[i]->gravity_direction;
 			joints[j]->rotation_axis = settings[i]->rotation_axis;
 			joints[j]->rotation_axis_vector = settings[i]->rotation_axis_vector;
@@ -1762,6 +1853,9 @@ void SpringBoneSimulator3D::_process_joints(double p_delta, Skeleton3D *p_skelet
 		// Convert position to rotation.
 		Vector3 from = current_rot.xform(verlet->forward_vector);
 		Vector3 to = p_inverted_center_transform.basis.xform(next_tail - current_origin);
+		if(p_joints[i]->inertia>0.0){
+			to = to.lerp(from, p_joints[i]->inertia);
+		}
 		from.normalize();
 		to.normalize();
 		Quaternion from_to = get_from_to_rotation(from, to, verlet->current_rot);

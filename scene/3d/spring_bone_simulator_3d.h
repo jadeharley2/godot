@@ -112,6 +112,7 @@ public:
 		float stiffness = 1.0;
 		float drag = 0.0;
 		float gravity = 0.0;
+		float inertia = 0.0;
 		Vector3 gravity_direction = Vector3(0, -1, 0);
 
 		// To process.
@@ -148,6 +149,8 @@ public:
 		float gravity = 0.0;
 		Ref<Curve> gravity_damping_curve;
 		Vector3 gravity_direction = Vector3(0, -1, 0);
+		float inertia = 0.0;
+		Ref<Curve> inertia_damping_curve;
 		RotationAxis rotation_axis = ROTATION_AXIS_ALL;
 		Vector3 rotation_axis_vector = Vector3(1, 0, 0);
 		Vector<SpringBone3DJointSetting *> joints;
@@ -249,6 +252,10 @@ public:
 	Ref<Curve> get_gravity_damping_curve(int p_index) const;
 	void set_gravity_direction(int p_index, const Vector3 &p_gravity_direction);
 	Vector3 get_gravity_direction(int p_index) const;
+	void set_inertia(int p_index, float p_inertia);
+	float get_inertia(int p_index) const;
+	void set_inertia_damping_curve(int p_index, const Ref<Curve> &p_damping_curve);
+	Ref<Curve> get_inertia_damping_curve(int p_index) const;
 
 	void set_setting_count(int p_count);
 	int get_setting_count() const;
@@ -277,6 +284,8 @@ public:
 	float get_joint_gravity(int p_index, int p_joint) const;
 	void set_joint_gravity_direction(int p_index, int p_joint, const Vector3 &p_gravity_direction);
 	Vector3 get_joint_gravity_direction(int p_index, int p_joint) const;
+	void set_joint_inertia(int p_index, int p_joint, float p_inertia);
+	float get_joint_inertia(int p_index, int p_joint) const;
 
 	void set_joint_count(int p_index, int p_count);
 	int get_joint_count(int p_index) const;
