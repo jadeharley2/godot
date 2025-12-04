@@ -1078,6 +1078,16 @@ void GDScript::_get_property_list(List<PropertyInfo> *p_properties) const {
 
 void GDScript::_bind_methods() {
 	ClassDB::bind_vararg_method(METHOD_FLAGS_DEFAULT, "new", &GDScript::_new, MethodInfo("new"));
+	ClassDB::bind_method(D_METHOD("get_instances"), &GDScript::get_instances);
+}
+
+Array GDScript::get_instances() {
+	Array r;
+	for (auto &&obj : instances)
+	{ 
+		r.push_back(obj);
+	}
+	return r;
 }
 
 void GDScript::set_path(const String &p_path, bool p_take_over) {
