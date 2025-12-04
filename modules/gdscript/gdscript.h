@@ -321,6 +321,10 @@ public:
 	void set_binary_tokens_source(const Vector<uint8_t> &p_binary_tokens);
 	const Vector<uint8_t> &get_binary_tokens_source() const;
 	Vector<uint8_t> get_as_binary_tokens() const;
+	
+	void set_binary_tokens(const PackedByteArray &p_binary_tokens);
+	const PackedByteArray get_binary_tokens() const;
+	void clear_binary_tokens();
 
 	bool get_property_default_value(const StringName &p_property, Variant &r_value) const override;
 

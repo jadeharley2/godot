@@ -1079,6 +1079,12 @@ void GDScript::_get_property_list(List<PropertyInfo> *p_properties) const {
 void GDScript::_bind_methods() {
 	ClassDB::bind_vararg_method(METHOD_FLAGS_DEFAULT, "new", &GDScript::_new, MethodInfo("new"));
 	ClassDB::bind_method(D_METHOD("get_instances"), &GDScript::get_instances);
+	ClassDB::bind_method(D_METHOD("set_binary_tokens","tokens"), &GDScript::set_binary_tokens); 
+	ClassDB::bind_method(D_METHOD("get_binary_tokens"), &GDScript::get_binary_tokens); 
+	ClassDB::bind_method(D_METHOD("clear_binary_tokens"), &GDScript::clear_binary_tokens); 
+	
+	ADD_PROPERTY(PropertyInfo(Variant::STRING, "binary_tokens", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_NONE), "set_binary_tokens", "get_binary_tokens");
+
 }
 
 Array GDScript::get_instances() {
@@ -1169,6 +1175,19 @@ Vector<uint8_t> GDScript::get_as_binary_tokens() const {
 const HashMap<StringName, GDScriptFunction *> &GDScript::debug_get_member_functions() const {
 	return member_functions;
 }
+
+void GDScript::set_binary_tokens(const PackedByteArray &p_binary_tokens){
+	binary_tokens = p_binary_tokens.to_byte_array();
+}
+
+const PackedByteArray GDScript::get_binary_tokens() const{
+	return PackedByteArray(binary_tokens);
+}
+
+void GDScript::clear_binary_tokens(){
+	binary_tokens.clear();
+}
+
 
 StringName GDScript::debug_get_member_by_index(int p_idx) const {
 	for (const KeyValue<StringName, MemberInfo> &E : member_indices) {
