@@ -1776,6 +1776,21 @@ TypedArray<Tween> SceneTree::get_processed_tweens() {
 	return ret;
 }
 
+TypedArray<StringName> SceneTree::_get_groups() {
+	_THREAD_SAFE_METHOD_
+	TypedArray<StringName> ret;
+	ret.resize(group_map.size());
+
+	int i = 0;
+	for (const KeyValue<StringName, SceneTree::Group> &item : group_map)
+	{
+		ret[i] = item.key;
+		i++;
+	}
+
+	return ret;
+}
+
 Ref<MultiplayerAPI> SceneTree::get_multiplayer(const NodePath &p_for_path) const {
 	ERR_FAIL_COND_V_MSG(!Thread::is_main_thread(), Ref<MultiplayerAPI>(), "Multiplayer can only be manipulated from the main thread.");
 	if (p_for_path.is_empty()) {
@@ -1916,6 +1931,7 @@ void SceneTree::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("get_nodes_in_group", "group"), &SceneTree::_get_nodes_in_group);
 	ClassDB::bind_method(D_METHOD("get_first_node_in_group", "group"), &SceneTree::get_first_node_in_group);
 	ClassDB::bind_method(D_METHOD("get_node_count_in_group", "group"), &SceneTree::get_node_count_in_group);
+	ClassDB::bind_method(D_METHOD("get_groups"), &SceneTree::_get_groups);
 
 	ClassDB::bind_method(D_METHOD("set_current_scene", "child_node"), &SceneTree::set_current_scene);
 	ClassDB::bind_method(D_METHOD("get_current_scene"), &SceneTree::get_current_scene);

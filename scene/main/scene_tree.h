@@ -431,6 +431,8 @@ public:
 	void remove_tween(const Ref<Tween> &p_tween);
 	TypedArray<Tween> get_processed_tweens();
 
+	TypedArray<StringName> _get_groups();
+
 	//used by Main::start, don't use otherwise
 	void add_current_scene(Node *p_current);
 
