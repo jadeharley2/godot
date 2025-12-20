@@ -156,7 +156,7 @@ void JoltArea3D::_flush_events(OverlapsById &p_objects, const Callable &p_callba
 
 			for (const ShapeIndexPair &shape_indices : overlap.pending_removed) {
 				int &ref_count = overlap.ref_counts[shape_indices];
-				ERR_CONTINUE(ref_count <= 0);
+				//ERR_CONTINUE(ref_count <= 0);
 				if (--ref_count == 0) {
 					_report_event(p_callback, PhysicsServer3D::AREA_BODY_REMOVED, overlap.rid, overlap.instance_id, shape_indices.other, shape_indices.self);
 					overlap.ref_counts.erase(shape_indices);
