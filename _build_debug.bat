@@ -1,0 +1,1 @@
+scons debug_symbols=true
