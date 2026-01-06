@@ -1665,6 +1665,23 @@ bool JoltPhysicsServer3D::is_flushing_queries() const {
 }
 
 int JoltPhysicsServer3D::get_process_info(ProcessInfo p_process_info) {
+	switch (p_process_info) {
+		case INFO_ACTIVE_OBJECTS: {
+			int active_objects = 0;
+			for (auto &&space : active_spaces)
+			{
+				active_objects+=space->get_physics_system().GetNumBodies();
+			} 
+			return active_objects;
+		} break;
+		case INFO_COLLISION_PAIRS: {
+			return 0;
+		} break;
+		case INFO_ISLAND_COUNT: {
+			return active_spaces.size();
+		} break;
+	}
+
 	return 0;
 }
 
