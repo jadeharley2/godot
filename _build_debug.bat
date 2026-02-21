@@ -1,1 +1,1 @@
-scons debug_symbols=true
+scons debug_symbols=true d3d12=no

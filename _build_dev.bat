@@ -1,1 +1,1 @@
-scons dev_build=yes
+scons dev_build=yes d3d12=no
