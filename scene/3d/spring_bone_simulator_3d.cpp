@@ -820,7 +820,7 @@ Vector3 SpringBoneSimulator3D::get_gravity_direction(int p_index) const {
 
 
 void SpringBoneSimulator3D::set_inertia(int p_index, float p_inertia) {
-	ERR_FAIL_INDEX(p_index, settings.size());
+	ERR_FAIL_INDEX(p_index, (int)settings.size());
 	if (is_config_individual(p_index)) {
 		return; // Joint config is individual mode.
 	}
@@ -829,12 +829,12 @@ void SpringBoneSimulator3D::set_inertia(int p_index, float p_inertia) {
 }
 
 float SpringBoneSimulator3D::get_inertia(int p_index) const {
-	ERR_FAIL_INDEX_V(p_index, settings.size(), 0);
+	ERR_FAIL_INDEX_V(p_index, (int)settings.size(), 0);
 	return settings[p_index]->inertia;
 }
 
 void SpringBoneSimulator3D::set_inertia_damping_curve(int p_index, const Ref<Curve> &p_damping_curve) {
-	ERR_FAIL_INDEX(p_index, settings.size());
+	ERR_FAIL_INDEX(p_index, (int)settings.size());
 	if (is_config_individual(p_index)) {
 		return; // Joint config is individual mode.
 	}
@@ -849,7 +849,7 @@ void SpringBoneSimulator3D::set_inertia_damping_curve(int p_index, const Ref<Cur
 }
 
 Ref<Curve> SpringBoneSimulator3D::get_inertia_damping_curve(int p_index) const {
-	ERR_FAIL_INDEX_V(p_index, settings.size(), Ref<Curve>());
+	ERR_FAIL_INDEX_V(p_index, (int)settings.size(), Ref<Curve>());
 	return settings[p_index]->inertia_damping_curve;
 }
 
@@ -1065,19 +1065,19 @@ Vector3 SpringBoneSimulator3D::get_joint_gravity_direction(int p_index, int p_jo
 }
 
 void SpringBoneSimulator3D::set_joint_inertia(int p_index, int p_joint, float p_inertia) {
-	ERR_FAIL_INDEX(p_index, settings.size());
+	ERR_FAIL_INDEX(p_index, (int)settings.size());
 	if (!is_config_individual(p_index)) {
 		return; // Joints are read-only.
 	}
-	Vector<SpringBone3DJointSetting *> &joints = settings[p_index]->joints;
-	ERR_FAIL_INDEX(p_joint, joints.size());
+	const LocalVector<SpringBone3DJointSetting *> &joints = settings[p_index]->joints;
+	ERR_FAIL_INDEX(p_joint, (int)joints.size());
 	joints[p_joint]->inertia = p_inertia;
 }
 
 float SpringBoneSimulator3D::get_joint_inertia(int p_index, int p_joint) const {
-	ERR_FAIL_INDEX_V(p_index, settings.size(), 0);
-	Vector<SpringBone3DJointSetting *> joints = settings[p_index]->joints;
-	ERR_FAIL_INDEX_V(p_joint, joints.size(), 0);
+	ERR_FAIL_INDEX_V(p_index, (int)settings.size(), 0);
+	const LocalVector<SpringBone3DJointSetting *> joints = settings[p_index]->joints;
+	ERR_FAIL_INDEX_V(p_joint, (int)joints.size(), 0);
 	return joints[p_joint]->inertia;
 }
 
