@@ -115,7 +115,7 @@ public:
 
 	void optimize_indices();
 
-	void generate_lods(float p_normal_merge_angle, Array p_skin_pose_transform_array, int options = 1);
+	void generate_lods(float p_normal_merge_angle, Array p_skin_pose_transform_array, int custom_simplify_options = -1);
 
 	void create_shadow_mesh();
 	Ref<ImporterMesh> get_shadow_mesh() const;

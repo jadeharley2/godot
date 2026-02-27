@@ -286,7 +286,7 @@ void ImporterMesh::optimize_indices() {
 	}                                                                                                              \
 	write_array[vert_idx] = transformed_vert;
 
-void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transform_array, int simplify_options ) {
+void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transform_array, int custom_simplify_options ) {
 	if (!SurfaceTool::simplify_scale_func) {
 		return;
 	}
@@ -489,7 +489,7 @@ void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transf
 			PackedInt32Array new_indices;
 			new_indices.resize(current_index_count);
 
-			simplify_options |= SurfaceTool::SIMPLIFY_SPARSE; // Does not change appearance, but speeds up subsequent iterations.
+			int simplify_options = SurfaceTool::SIMPLIFY_SPARSE; // Does not change appearance, but speeds up subsequent iterations.
 			Vector<float> merged_normals_f32 = vector3_to_float32_array(merged_normals.ptr(), merged_normals.size());
 			//const int simplify_options = SurfaceTool::SIMPLIFY_LOCK_BORDER;
 
@@ -504,6 +504,10 @@ void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transf
 			if (deformable) {
 				// Improves appearance of deformable objects after deformation by using more regular tessellation.
 				simplify_options |= SurfaceTool::SIMPLIFY_REGULARIZE;
+			}
+
+			if(custom_simplify_options>=0){
+				simplify_options = custom_simplify_options;
 			}
 
 			float step_error = 0.0f;
@@ -570,7 +574,13 @@ void ImporterMesh::generate_lods(float p_normal_merge_angle, Array p_bone_transf
 
 void ImporterMesh::_generate_lods_bind(float p_normal_merge_angle, float p_normal_split_angle, Array p_skin_pose_transform_array) {
 	// p_normal_split_angle is unused, but kept for compatibility
-	generate_lods(p_normal_merge_angle, p_skin_pose_transform_array);
+	if(has_meta("simplify_options")){
+		generate_lods(p_normal_merge_angle, p_skin_pose_transform_array,get_meta("simplify_options",-1));
+	}
+	else
+	{
+		generate_lods(p_normal_merge_angle, p_skin_pose_transform_array);
+	} 
 }
 
 void ImporterMesh::_generate_lods_bind_ex(float p_normal_merge_angle, Array p_skin_pose_transform_array, int options) { 
