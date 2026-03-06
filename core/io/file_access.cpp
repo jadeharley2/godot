@@ -157,9 +157,35 @@ Error FileAccess::reopen(const String &p_path, int p_mode_flags) {
 }
 
 Ref<FileAccess> FileAccess::open(const String &p_path, int p_mode_flags, Error *r_error) {
+	
+	Ref<FileAccess> ret;
+
+	for (auto &&i : _file_handlers)
+	{
+		Variant result = i.value.call(p_path);
+		if(!result.is_null()){
+			if(result.is_num()){
+				if (r_error) {
+					*r_error = result;
+				}
+				return ret;
+			}
+			else if (result.is_ref_counted()){ 
+				ret = result;
+				if (ret.is_valid()) {
+					if (r_error) {
+						*r_error = OK;
+					}
+					return ret;
+				}
+			}
+		}
+	}
+	
+
+
 	//try packed data first
 
-	Ref<FileAccess> ret;
 	if (!(p_mode_flags & WRITE) && !(p_mode_flags & SKIP_PACK) && PackedData::get_singleton() && !PackedData::get_singleton()->is_disabled()) {
 		ret = PackedData::get_singleton()->try_open_path(p_path);
 		if (ret.is_valid()) {
@@ -1057,6 +1083,9 @@ void FileAccess::_bind_methods() {
 
 	ClassDB::bind_static_method("FileAccess", D_METHOD("get_file_as_bytes", "path"), &FileAccess::_get_file_as_bytes);
 	ClassDB::bind_static_method("FileAccess", D_METHOD("get_file_as_string", "path"), &FileAccess::_get_file_as_string);
+
+	ClassDB::bind_static_method("FileAccess", D_METHOD("add_file_handler", "key", "handler"), &FileAccess::add_file_handler);
+	ClassDB::bind_static_method("FileAccess", D_METHOD("remove_file_handler", "key"), &FileAccess::remove_file_handler);
 
 	ClassDB::bind_method(D_METHOD("resize", "length"), &FileAccess::resize);
 	ClassDB::bind_method(D_METHOD("flush"), &FileAccess::flush);

@@ -287,8 +287,22 @@ public:
 		create_func[p_access] = _create_builtin<T>;
 	}
 
+	
+
 public:
 	virtual ~FileAccess();
+
+
+private:
+	static inline HashMap<StringName,Callable> _file_handlers = HashMap<StringName,Callable>();
+public:
+	static void add_file_handler(const StringName &key,const Callable &handler){
+		_file_handlers[key] = handler;
+	}
+	static bool remove_file_handler(const StringName &key){
+		return _file_handlers.erase(key);
+	}
+
 };
 
 VARIANT_ENUM_CAST(FileAccess::CompressionMode);
