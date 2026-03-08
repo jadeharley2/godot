@@ -36,6 +36,34 @@
 #include "core/os/memory.h"
 #include "core/string/ustring.h"
 #include "core/typedefs.h"
+#include "core/object/gdvirtual.gen.inc"
+
+class FileAccessHandler : public RefCounted {
+	GDCLASS(FileAccessHandler, RefCounted);
+
+protected:
+	static void _bind_methods();
+	
+	GDVIRTUAL1RC(bool, _exists, String) 
+	GDVIRTUAL2RC(Variant, _open, String, int32_t) 
+
+public:
+	
+	bool exists(const String &p_path){
+		bool ret = false;
+		if (GDVIRTUAL_CALL(_exists, p_path, ret)) {
+			return ret;
+		}
+		return false;
+	}
+	Variant open(const String &p_path, int32_t p_mode_flags){
+		Variant ret;
+		if (GDVIRTUAL_CALL(_open, p_path, p_mode_flags, ret)) {
+			return ret;
+		}
+		return ret;
+	}
+};
 
 /**
  * Multi-Platform abstraction for accessing to files.
@@ -59,6 +87,8 @@ public:
 		READ_WRITE = 3,
 		WRITE_READ = 7,
 		SKIP_PACK = 16,
+
+		SKIP_HANDLERS = 256,
 	};
 
 	enum UnixPermissionFlags : int32_t {
@@ -294,9 +324,9 @@ public:
 
 
 private:
-	static inline HashMap<StringName,Callable> _file_handlers = HashMap<StringName,Callable>();
+	static inline HashMap<StringName,Ref<FileAccessHandler>>_file_handlers = HashMap<StringName,Ref<FileAccessHandler>>();
 public:
-	static void add_file_handler(const StringName &key,const Callable &handler){
+	static void add_file_handler(const StringName &key,Ref<FileAccessHandler> handler){
 		_file_handlers[key] = handler;
 	}
 	static bool remove_file_handler(const StringName &key){

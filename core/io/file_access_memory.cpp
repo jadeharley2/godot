@@ -168,3 +168,11 @@ bool FileAccessMemory::store_buffer(const uint8_t *p_src, uint64_t p_length) {
 
 	return true;
 }
+
+
+
+
+void FileAccessMemory::_bind_methods() {
+	ClassDB::bind_static_method("FileAccessMemory", D_METHOD("open_custom", "data", "len"), &FileAccessMemory::_open_custom); 
+
+}

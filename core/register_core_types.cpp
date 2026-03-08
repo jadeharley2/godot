@@ -81,6 +81,7 @@
 #include "core/string/optimized_translation.h"
 #include "core/string/translation.h"
 #include "core/string/translation_server.h"
+#include "core/io/file_access_memory.h"
 #ifndef DISABLE_DEPRECATED
 #include "core/io/packed_data_container.h"
 #endif
@@ -257,8 +258,10 @@ void register_core_types() {
 	GDREGISTER_CLASS(UndoRedo);
 	GDREGISTER_CLASS(TriangleMesh);
 
+	GDREGISTER_CLASS(FileAccessHandler);
 	GDREGISTER_ABSTRACT_CLASS(FileAccess);
 	GDREGISTER_ABSTRACT_CLASS(DirAccess);
+	GDREGISTER_CLASS(FileAccessMemory);
 	GDREGISTER_CLASS(CoreBind::Thread);
 	GDREGISTER_CLASS(CoreBind::Mutex);
 	GDREGISTER_CLASS(CoreBind::Semaphore);

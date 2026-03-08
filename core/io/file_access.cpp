@@ -51,6 +51,15 @@ Ref<FileAccess> FileAccess::create(AccessType p_access) {
 }
 
 bool FileAccess::exists(const String &p_name) {
+
+	for (auto &&i : _file_handlers)
+	{
+		if(i.value->exists(p_name))
+		{
+			return true;
+		} 
+	}
+
 	if (PackedData::get_singleton() && !PackedData::get_singleton()->is_disabled() && PackedData::get_singleton()->has_path(p_name)) {
 		return true;
 	}
@@ -159,24 +168,25 @@ Error FileAccess::reopen(const String &p_path, int p_mode_flags) {
 Ref<FileAccess> FileAccess::open(const String &p_path, int p_mode_flags, Error *r_error) {
 	
 	Ref<FileAccess> ret;
-
-	for (auto &&i : _file_handlers)
-	{
-		Variant result = i.value.call(p_path);
-		if(!result.is_null()){
-			if(result.is_num()){
-				if (r_error) {
-					*r_error = result;
-				}
-				return ret;
-			}
-			else if (result.is_ref_counted()){ 
-				ret = result;
-				if (ret.is_valid()) {
+	if(!(p_mode_flags & SKIP_HANDLERS)){ 
+		for (auto &&i : _file_handlers)
+		{
+			Variant result = i.value->open(p_path,p_mode_flags); 
+			if(!result.is_null()){
+				if(result.is_num()){
 					if (r_error) {
-						*r_error = OK;
+						*r_error = result;
 					}
 					return ret;
+				}
+				else if (result.is_ref_counted()){ 
+					ret = result;
+					if (ret.is_valid()) {
+						if (r_error) {
+							*r_error = OK;
+						}
+						return ret;
+					}
 				}
 			}
 		}
@@ -1161,6 +1171,7 @@ void FileAccess::_bind_methods() {
 	BIND_ENUM_CONSTANT(WRITE);
 	BIND_ENUM_CONSTANT(READ_WRITE);
 	BIND_ENUM_CONSTANT(WRITE_READ);
+	BIND_ENUM_CONSTANT(SKIP_HANDLERS);
 
 	BIND_ENUM_CONSTANT(COMPRESSION_FASTLZ);
 	BIND_ENUM_CONSTANT(COMPRESSION_DEFLATE);
@@ -1184,4 +1195,13 @@ void FileAccess::_bind_methods() {
 
 FileAccess::~FileAccess() {
 	_delete_temp();
+}
+
+
+
+
+
+void FileAccessHandler::_bind_methods() { 
+	GDVIRTUAL_BIND(_exists, "path");
+	GDVIRTUAL_BIND(_open, "path", "mode_flags");
 }
