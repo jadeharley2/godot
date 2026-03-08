@@ -33,13 +33,15 @@
 #include "core/io/file_access.h"
 
 class FileAccessMemory : public FileAccess {
-	GDSOFTCLASS(FileAccessMemory, FileAccess);
+	GDCLASS(FileAccessMemory, FileAccess);
 	uint8_t *data = nullptr;
 	uint64_t length = 0;
 	mutable uint64_t pos = 0;
 
 	static Ref<FileAccess> create();
 
+protected:
+	static void _bind_methods();
 public:
 	static void register_file(const String &p_name, const Vector<uint8_t> &p_data);
 	static void cleanup();
@@ -78,4 +80,17 @@ public:
 	virtual Error _set_read_only_attribute(const String &p_file, bool p_ro) override { return ERR_UNAVAILABLE; }
 
 	virtual void close() override {}
+
+	
+	static Ref<FileAccessMemory> _open_custom(const PackedByteArray &p_data, uint64_t p_len = 0){
+		if(p_len==0){
+			p_len = p_data.size();
+		}
+		Ref<FileAccessMemory> f;
+		f.instantiate();
+		if(f->open_custom(p_data.ptr(),p_len)){
+			f.unref();
+		}
+		return f;
+	}
 };
