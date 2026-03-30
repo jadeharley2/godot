@@ -1115,6 +1115,8 @@ bool AnimationNodeTransition::_set(const StringName &p_path, const Variant &p_va
 		set_input_break_loop_at_end(which, p_value);
 	} else if (what == "reset") {
 		set_input_reset(which, p_value);
+	} else if (what == "await_end") {
+		set_await_end(which, p_value);
 	} else {
 		return false;
 	}
@@ -1142,6 +1144,8 @@ bool AnimationNodeTransition::_get(const StringName &p_path, Variant &r_ret) con
 		r_ret = is_input_loop_broken_at_end(which);
 	} else if (what == "reset") {
 		r_ret = is_input_reset(which);
+	} else if (what == "await_end") {
+		r_ret = get_await_end(which);
 	} else {
 		return false;
 	}
@@ -1260,6 +1264,16 @@ void AnimationNodeTransition::set_input_reset(int p_input, bool p_enable) {
 bool AnimationNodeTransition::is_input_reset(int p_input) const {
 	ERR_FAIL_INDEX_V(p_input, get_input_count(), true);
 	return input_data[p_input].reset;
+}
+
+void AnimationNodeTransition::set_await_end(int p_input, bool p_enable) {
+	ERR_FAIL_INDEX(p_input, get_input_count());
+	input_data[p_input].await_end = p_enable;
+}
+
+bool AnimationNodeTransition::get_await_end(int p_input) const {
+	ERR_FAIL_INDEX_V(p_input, get_input_count(), true);
+	return input_data[p_input].await_end;
 }
 
 void AnimationNodeTransition::set_xfade_time(double p_fade) {
@@ -1386,6 +1400,9 @@ AnimationNode::NodeTimeInfo AnimationNodeTransition::_process(const AnimationMix
 		if (input_data[cur_current_index].auto_advance && Animation::is_less_or_equal_approx(cur_nti.get_remain(input_data[cur_current_index].break_loop_at_end), xfade_time)) {
 			set_parameter(transition_request, get_input_name((cur_current_index + 1) % get_input_count()));
 		}
+		if(input_data[cur_current_index].await_end){
+			cur_prev_xfading = xfade_time;
+		}
 	} else { // Cross-fading from prev to current.
 
 		real_t blend = 0.0;
@@ -1413,12 +1430,23 @@ AnimationNode::NodeTimeInfo AnimationNodeTransition::_process(const AnimationMix
 		pi = p_playback_info;
 		pi.seeked &= use_blend;
 		pi.weight = blend;
-		blend_input(cur_prev_index, pi, FILTER_IGNORE, true, p_test_only);
+		NodeTimeInfo prev_nti = blend_input(cur_prev_index, pi, FILTER_IGNORE, true, p_test_only);
 		if (!p_seek) {
-			if (Animation::is_less_or_equal_approx(cur_prev_xfading, 0)) {
-				set_parameter(prev_index, -1);
-			}
-			cur_prev_xfading -= Math::abs(p_playback_info.delta);
+			if(input_data[cur_prev_index].await_end && Animation::is_greater_approx(prev_nti.get_remain(),xfade_time)) {
+				// wait for previous input to end before fading  
+				if (xfade_time > 0) {
+					cur_prev_xfading = xfade_time;
+					set_parameter(prev_xfading, cur_prev_xfading);
+					return prev_nti;
+				}
+			} 
+			else 
+			{
+				if (Animation::is_less_or_equal_approx(cur_prev_xfading, 0)) {
+					set_parameter(prev_index, -1);
+				} 
+				cur_prev_xfading -= Math::abs(p_playback_info.delta);
+			} 
 		}
 	}
 
@@ -1433,6 +1461,7 @@ void AnimationNodeTransition::_get_property_list(List<PropertyInfo> *p_list) con
 		p_list->push_back(PropertyInfo(Variant::BOOL, "input_" + itos(i) + "/auto_advance", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::BOOL, "input_" + itos(i) + "/break_loop_at_end", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_INTERNAL));
 		p_list->push_back(PropertyInfo(Variant::BOOL, "input_" + itos(i) + "/reset", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_INTERNAL));
+		p_list->push_back(PropertyInfo(Variant::BOOL, "input_" + itos(i) + "/await_end", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_DEFAULT | PROPERTY_USAGE_INTERNAL));
 	}
 }
 
@@ -1456,6 +1485,10 @@ void AnimationNodeTransition::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_allow_transition_to_self", "enable"), &AnimationNodeTransition::set_allow_transition_to_self);
 	ClassDB::bind_method(D_METHOD("is_allow_transition_to_self"), &AnimationNodeTransition::is_allow_transition_to_self);
+
+	
+	ClassDB::bind_method(D_METHOD("set_await_end", "input", "enable"), &AnimationNodeTransition::set_await_end);
+	ClassDB::bind_method(D_METHOD("get_await_end", "input"), &AnimationNodeTransition::get_await_end);
 
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "xfade_time", PROPERTY_HINT_RANGE, "0,120,0.01,suffix:s"), "set_xfade_time", "get_xfade_time");
 	ADD_PROPERTY(PropertyInfo(Variant::OBJECT, "xfade_curve", PROPERTY_HINT_RESOURCE_TYPE, "Curve"), "set_xfade_curve", "get_xfade_curve");
