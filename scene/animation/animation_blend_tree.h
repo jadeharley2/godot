@@ -336,6 +336,7 @@ class AnimationNodeTransition : public AnimationNodeSync {
 		bool auto_advance = false;
 		bool break_loop_at_end = false;
 		bool reset = true;
+		bool await_end = false;
 	};
 	LocalVector<InputData> input_data;
 
@@ -387,6 +388,9 @@ public:
 
 	void set_allow_transition_to_self(bool p_enable);
 	bool is_allow_transition_to_self() const;
+	
+	void set_await_end(int p_input, bool p_enable);
+	bool get_await_end(int p_input) const;
 
 	virtual NodeTimeInfo _process(ProcessState &p_process_state, AnimationNodeInstance &p_instance, const AnimationMixer::PlaybackInfo &p_playback_info, bool p_test_only = false) override;
 
