@@ -456,6 +456,8 @@ private:
 	uint64_t last_track_map_version = 0;
 
 	bool started = true;
+	
+	bool save_properties = true;
 
 	friend class AnimationNode;
 
@@ -544,6 +546,15 @@ public:
 
 	void set_advance_expression_base_node(const NodePath &p_path);
 	NodePath get_advance_expression_base_node() const;
+
+	void set_save_properties(bool save){ 
+		if(save_properties != save) {
+			save_properties = save; 
+			notify_property_list_changed();
+		}
+	}
+	bool get_save_properties() const {return save_properties;}
+
 
 	PackedStringArray get_configuration_warnings() const override;
 
