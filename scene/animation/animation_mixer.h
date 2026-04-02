@@ -91,6 +91,10 @@ public:
 		Animation::LoopedFlag looped_flag = Animation::LOOPED_FLAG_NONE;
 		real_t weight = 0.0;
 		LocalVector<real_t> *track_weights = nullptr;
+		
+		operator Dictionary() const; 
+		static PlaybackInfo from_dict(const Dictionary &p_dict);
+
 	};
 
 	struct AnimationInstance {
@@ -459,6 +463,12 @@ public:
 	void clear_animation_instances();
 	virtual void advance(double p_time);
 	virtual void clear_caches(); // Must be called by hand if an animation was modified after added.
+
+	/* custom mixing */
+	int _add_animation_instance(const StringName &p_name, const Dictionary p_playback_info);
+	Dictionary _get_animation_instance(int id) const;
+	int _get_animation_instance_count() const;
+	void _remove_animation_instance(int id);
 
 	/* ---- Capture feature ---- */
 	void capture(const StringName &p_name, double p_duration, Tween::TransitionType p_trans_type = Tween::TRANS_LINEAR, Tween::EaseType p_ease_type = Tween::EASE_IN);
