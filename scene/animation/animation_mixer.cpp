@@ -2067,6 +2067,79 @@ void AnimationMixer::clear_caches() {
 	_clear_caches();
 }
 
+
+//struct PlaybackInfo {
+//	double time = 0.0;
+//	double delta = 0.0;
+//	double start = 0.0;
+//	double end = 0.0;
+//	bool seeked = false;
+//	bool is_external_seeking = false;
+//	Animation::LoopedFlag looped_flag = Animation::LOOPED_FLAG_NONE;
+//	real_t weight = 0.0;
+//	Vector<real_t> track_weights;
+//};
+
+AnimationMixer::PlaybackInfo::operator Dictionary() const {
+	Dictionary d;
+	d["time"] = time; 
+	d["delta"] = delta; 
+	d["start"] = start; 
+	d["end"] = end; 
+	d["seeked"] = seeked; 
+	d["weight"] = weight; 
+	d["track_weights"] = track_weights; 
+	return d;
+}
+
+AnimationMixer::PlaybackInfo AnimationMixer::PlaybackInfo::from_dict(const Dictionary &p_dict)  {
+	AnimationMixer::PlaybackInfo pi;
+	if(p_dict.has("time")) 		pi.time = 	p_dict["time"]; 
+	if(p_dict.has("delta")) 	pi.delta = 	p_dict["delta"]; 
+	if(p_dict.has("start")) 	pi.start = 	p_dict["start"]; 
+	if(p_dict.has("end")) 		pi.end = 	p_dict["end"]; 
+	if(p_dict.has("seeked")) 	pi.seeked = p_dict["seeked"]; 
+	if(p_dict.has("weight")) 	pi.weight = p_dict["weight"]; 
+	if(p_dict.has("track_weights")) pi.track_weights = p_dict["track_weights"];   
+	return pi;
+}
+
+
+int AnimationMixer::_add_animation_instance(const StringName &p_name, const Dictionary p_playback_info) {
+	//ERR_FAIL_COND(!has_animation(p_name));
+
+	AnimationData ad;
+	ad.name = p_name;
+	ad.animation = get_animation(p_name);
+	ad.animation_library = find_animation_library(ad.animation);
+
+	AnimationInstance ai;
+	ai.animation_data = ad;
+	ai.playback_info = PlaybackInfo::from_dict(p_playback_info);
+
+	int idx = animation_instances.size();
+	animation_instances.push_back(ai);
+	return idx;
+}
+Dictionary AnimationMixer::_get_animation_instance(int id) const{
+	if(id<0||id>=(int)animation_instances.size()) return Variant();
+	AnimationInstance ai = animation_instances[id];
+	Dictionary d =Dictionary( ai.playback_info);
+	d["name"] = ai.animation_data.name;
+	d["animation"] = ai.animation_data.animation;
+	d["animation_library"] = ai.animation_data.animation_library;
+	return d; 
+}
+
+int AnimationMixer::_get_animation_instance_count() const{
+	return animation_instances.size();
+}
+
+void AnimationMixer::_remove_animation_instance(int id) {
+	if(id<0||id>=(int)animation_instances.size()) return;
+	animation_instances.remove_at(id);
+}
+
 /* -------------------------------------------- */
 /* -- Root motion ----------------------------- */
 /* -------------------------------------------- */
@@ -2447,6 +2520,15 @@ void AnimationMixer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("clear_caches"), &AnimationMixer::clear_caches);
 	ClassDB::bind_method(D_METHOD("advance", "delta"), &AnimationMixer::advance);
 	GDVIRTUAL_BIND(_post_process_key_value, "animation", "track", "value", "object_id", "object_sub_idx");
+
+
+	/* custom mixing */
+	ClassDB::bind_method(D_METHOD("add_animation_instance","name","p_playback_info"), &AnimationMixer::_add_animation_instance);
+	ClassDB::bind_method(D_METHOD("get_animation_instance","id"), &AnimationMixer::_get_animation_instance);
+	ClassDB::bind_method(D_METHOD("get_animation_instance_count"), &AnimationMixer::_get_animation_instance_count);
+	ClassDB::bind_method(D_METHOD("remove_animation_instance","id"), &AnimationMixer::_remove_animation_instance);
+	ClassDB::bind_method(D_METHOD("clear_animation_instances"), &AnimationMixer::clear_animation_instances);
+	
 
 	/* ---- Capture feature ---- */
 	ClassDB::bind_method(D_METHOD("capture", "name", "duration", "trans_type", "ease_type"), &AnimationMixer::capture, DEFVAL(Tween::TRANS_LINEAR), DEFVAL(Tween::EASE_IN));
