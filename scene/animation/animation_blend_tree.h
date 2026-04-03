@@ -324,6 +324,41 @@ public:
 	AnimationNodeTimeSeek();
 };
 
+class AnimationNodeStack : public AnimationNodeSync {
+	GDCLASS(AnimationNodeStack, AnimationNodeSync);
+
+	struct InputData {
+		bool additive = false;   
+	};
+	LocalVector<InputData> input_data; 
+
+protected:
+	bool _get(const StringName &p_path, Variant &r_ret) const;
+	bool _set(const StringName &p_path, const Variant &p_value);
+	static void _bind_methods();
+	void _get_property_list(List<PropertyInfo> *p_list) const;
+	
+public:
+	virtual void get_parameter_list(List<PropertyInfo> *r_list) const override;
+	virtual Variant get_parameter_default_value(const StringName &p_parameter) const override;
+
+	virtual String get_caption() const override;
+	
+	void set_input_count(int p_inputs);
+
+	virtual bool add_input(const String &p_name) override;
+	virtual void remove_input(int p_index) override;
+	virtual bool set_input_name(int p_input, const String &p_name) override;
+	void set_input_weight(int p_input, float weight);
+	float get_input_weight(int p_input) const;
+	void set_input_additive(int p_input, bool is_additive);
+	bool get_input_additive(int p_input) const;
+
+	virtual NodeTimeInfo _process(const AnimationMixer::PlaybackInfo p_playback_info, bool p_test_only = false) override;
+
+	AnimationNodeStack();
+};
+
 class AnimationNodeTransition : public AnimationNodeSync {
 	GDCLASS(AnimationNodeTransition, AnimationNodeSync);
 

@@ -956,6 +956,170 @@ AnimationNodeBlend3::AnimationNodeBlend3() {
 	add_input("+blend");
 }
 
+
+/////////////////////////////////////////////
+
+
+bool AnimationNodeStack::_set(const StringName &p_path, const Variant &p_value) {
+	String path = p_path;
+
+	if (!path.begins_with("input_")) {
+		return false;
+	}
+
+	int which = path.get_slicec('/', 0).get_slicec('_', 1).to_int();
+	String what = path.get_slicec('/', 1);
+
+	if (which == get_input_count() && what == "name") {
+		if (add_input(p_value)) {
+			return true;
+		}
+		return false;
+	}
+
+	ERR_FAIL_INDEX_V(which, get_input_count(), false);
+
+	if (what == "name") {
+		set_input_name(which, p_value);
+	} else if (what == "weight") {
+		set_input_weight(which, p_value); 
+	} else {
+		return false;
+	}
+
+	return true;
+}
+
+bool AnimationNodeStack::_get(const StringName &p_path, Variant &r_ret) const {
+	String path = p_path;
+
+	if (!path.begins_with("input_")) {
+		return false;
+	}
+
+	int which = path.get_slicec('/', 0).get_slicec('_', 1).to_int();
+	String what = path.get_slicec('/', 1);
+
+	ERR_FAIL_INDEX_V(which, get_input_count(), false);
+
+	if (what == "name") {
+		r_ret = get_input_name(which);
+	} else if (what == "weight") {
+		r_ret = get_input_weight(which); 
+	} else {
+		return false;
+	}
+
+	return true;
+}
+
+void AnimationNodeStack::get_parameter_list(List<PropertyInfo> *r_list) const {
+	AnimationNode::get_parameter_list(r_list); 
+}
+
+Variant AnimationNodeStack::get_parameter_default_value(const StringName &p_parameter) const {
+	Variant ret = AnimationNode::get_parameter_default_value(p_parameter);
+	if (ret != Variant()) {
+		return ret;
+	}
+
+	return 0.0; // For blend amount.
+}
+
+String AnimationNodeStack::get_caption() const {
+	return "Stack";
+}
+
+
+
+void AnimationNodeStack::set_input_count(int p_inputs) {
+	for (int i = get_input_count(); i < p_inputs; i++) {
+		add_input("layer_" + itos(i));
+	}
+	while (get_input_count() > p_inputs) {
+		remove_input(get_input_count() - 1);
+	}
+
+	//pending_update = true;
+
+	emit_signal(SNAME("tree_changed")); // For updating connect activity map.
+	notify_property_list_changed();
+}
+
+bool AnimationNodeStack::add_input(const String &p_name) {
+	if (AnimationNode::add_input(p_name)) {
+		input_data.push_back(InputData());
+		return true;
+	}
+	return false;
+}
+
+void AnimationNodeStack::remove_input(int p_index) {
+	input_data.remove_at(p_index);
+	AnimationNode::remove_input(p_index);
+}
+
+bool AnimationNodeStack::set_input_name(int p_input, const String &p_name) { 
+	if (!AnimationNode::set_input_name(p_input, p_name)) {
+		return false;
+	}
+	emit_signal(SNAME("tree_changed")); // For updating enum options.
+	return true;
+}
+void AnimationNodeStack::set_input_weight(int p_input, float weight){
+	//input_data[p_input].weight =	
+}
+float AnimationNodeStack::get_input_weight(int p_input) const{
+	return 1.0;
+}
+void AnimationNodeStack::set_input_additive(int p_input, bool is_additive){
+	if(p_input<0||p_input>=get_input_count()) return;
+	input_data[p_input].additive = is_additive;
+}
+bool AnimationNodeStack::get_input_additive(int p_input) const{
+	if(p_input<0||p_input>=get_input_count()) return false;
+	return input_data[p_input].additive;
+}
+
+
+AnimationNode::NodeTimeInfo AnimationNodeStack::_process(const AnimationMixer::PlaybackInfo p_playback_info, bool p_test_only) {
+	if(get_input_count()==0){
+		return NodeTimeInfo();
+	}
+
+	AnimationMixer::PlaybackInfo pi = p_playback_info;
+	NodeTimeInfo nti;
+	for (int i = 0; i < get_input_count(); i++) {
+		pi.weight = 1.0;
+		if(i==0){
+			nti = blend_input(i, pi, FILTER_IGNORE, sync, p_test_only);
+		}
+		else{
+			nti = blend_input(i, pi, FILTER_STOP, sync, p_test_only);
+		}
+	} 
+
+	return nti; 
+}
+
+AnimationNodeStack::AnimationNodeStack() { 
+}
+
+
+void AnimationNodeStack::_get_property_list(List<PropertyInfo> *p_list) const {
+	for (int i = 0; i < get_input_count();i++)
+	{ 
+		p_list->push_back(PropertyInfo(Variant::FLOAT, "input_" + itos(i) + "/weight", PROPERTY_HINT_RANGE, "0,1,0.01"));
+	} 
+} 
+
+void AnimationNodeStack::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("set_input_count", "input_count"), &AnimationNodeStack::set_input_count);
+   
+	  
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "input_count", PROPERTY_HINT_NONE, "", PROPERTY_USAGE_EDITOR | PROPERTY_USAGE_ARRAY | PROPERTY_USAGE_UPDATE_ALL_IF_MODIFIED, "Inputs,input_"), "set_input_count", "get_input_count");
+}
+
 ////////////////////////////////////////////////
 
 void AnimationNodeSub2::get_parameter_list(List<PropertyInfo> *r_list) const {

@@ -1261,6 +1261,7 @@ AnimationNodeBlendTreeEditor::AnimationNodeBlendTreeEditor() {
 	add_options.push_back(AddOption("TimeSeek", "AnimationNodeTimeSeek", 1));
 	add_options.push_back(AddOption("TimeScale", "AnimationNodeTimeScale", 1));
 	add_options.push_back(AddOption("Transition", "AnimationNodeTransition"));
+	add_options.push_back(AddOption("Stack", "AnimationNodeStack"));
 	add_options.push_back(AddOption("BlendTree", "AnimationNodeBlendTree"));
 	add_options.push_back(AddOption("BlendSpace1D", "AnimationNodeBlendSpace1D"));
 	add_options.push_back(AddOption("BlendSpace2D", "AnimationNodeBlendSpace2D"));
