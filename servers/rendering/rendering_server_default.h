@@ -940,6 +940,20 @@ public:
 
 	FUNC1(gi_set_use_half_resolution, bool)
 
+
+	FUNCRIDSPLIT(projector)
+	FUNC2(projector_set_source_scenario, RID, RID)
+	FUNC2(projector_set_target_scenario, RID, RID)
+	FUNC2(projector_update, RID, Transform3D)
+
+
+	FUNC0RC(TypedArray<RID>, instance_get_all)
+	FUNC1RC(RID, instance_get_base, RID)
+	FUNC1RC(RID, instance_get_scenario, RID)
+	FUNC1RC(Dictionary, instance_get_data, RID)
+	FUNC1RC(Transform3D, instance_get_transform, RID)
+	FUNC1RC(TypedArray<RID>, scenario_get_instances, RID) 
+
 #undef server_name
 #undef ServerName
 //from now on, calls forwarded to this singleton

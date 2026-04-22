@@ -74,8 +74,23 @@ public:
 	virtual void scenario_add_viewport_visibility_mask(RID p_scenario, RID p_viewport) = 0;
 	virtual void scenario_remove_viewport_visibility_mask(RID p_scenario, RID p_viewport) = 0;
 
+	virtual RID projector_allocate() = 0;
+	virtual void projector_initialize(RID p_rid) = 0;
+
+	virtual void projector_set_source_scenario(RID p_rid, RID p_scenario) = 0;
+	virtual void projector_set_target_scenario(RID p_rid, RID p_scenario) = 0;
+	virtual void projector_update(RID p_projector, Transform3D global_transform) = 0;
+	virtual bool is_projector(RID p_projector) const = 0;
+
 	virtual RID instance_allocate() = 0;
 	virtual void instance_initialize(RID p_rid) = 0;
+
+	virtual TypedArray<RID> instance_get_all() const = 0;
+	virtual RID instance_get_base(RID p_instance) const = 0;
+	virtual RID instance_get_scenario(RID p_instance) const = 0;
+	virtual Dictionary instance_get_data(RID p_instance) const = 0;
+	virtual Transform3D instance_get_transform(RID p_instance) const = 0;
+	virtual TypedArray<RID> scenario_get_instances(RID p_scenario) const = 0;
 
 	virtual void instance_set_base(RID p_instance, RID p_base) = 0;
 	virtual void instance_set_scenario(RID p_instance, RID p_scenario) = 0;

@@ -381,6 +381,26 @@ public:
 	virtual void scenario_add_viewport_visibility_mask(RID p_scenario, RID p_viewport);
 	virtual void scenario_remove_viewport_visibility_mask(RID p_scenario, RID p_viewport);
 
+	//custom  
+	struct Projector {
+		RID self;
+
+		Scenario *source_scenario = nullptr;
+		Scenario *target_scenario = nullptr;
+		
+		HashMap<Instance *,Instance *> projections;
+		
+	};
+	mutable RID_Owner<Projector, true> projector_owner;
+
+	virtual RID projector_allocate();
+	virtual void projector_initialize(RID p_rid);
+	virtual void projector_set_source_scenario(RID p_rid, RID p_scenario);
+	virtual void projector_set_target_scenario(RID p_rid, RID p_scenario);
+	inline void _instance_sync_data(Instance *instance_from,Instance *instance_to);
+	virtual void projector_update(RID p_projector, Transform3D global_transform);
+	virtual bool is_projector(RID p_projector) const;
+
 	/* INSTANCING API */
 
 	struct InstancePair {
@@ -486,6 +506,10 @@ public:
 		uint64_t pair_check;
 
 		DependencyTracker dependency_tracker;
+		
+		// custom
+		RID projection_source;
+		//
 
 		static void dependency_changed(Dependency::DependencyChangedNotification p_notification, DependencyTracker *tracker) {
 			Instance *instance = (Instance *)tracker->userdata;
@@ -1019,6 +1043,16 @@ public:
 
 	virtual RID instance_allocate();
 	virtual void instance_initialize(RID p_rid);
+
+	virtual TypedArray<RID> instance_get_all() const;
+	virtual RID instance_get_base(RID p_instance) const;
+	virtual RID instance_get_scenario(RID p_instance) const;
+	virtual Dictionary instance_get_data(RID p_instance) const; 
+	virtual Transform3D instance_get_transform(RID p_instance) const;
+	virtual TypedArray<RID> scenario_get_instances(RID p_scenario) const;
+
+	virtual	void instance_clone_data(RID p_instance_from, RID p_instance_to);
+	
 
 	virtual void instance_set_base(RID p_instance, RID p_base);
 	virtual void instance_set_scenario(RID p_instance, RID p_scenario);

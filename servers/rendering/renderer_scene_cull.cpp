@@ -569,6 +569,193 @@ void RendererSceneCull::_instance_update_mesh_instance(Instance *p_instance) con
 	}
 }
 
+//custom
+
+
+RID RendererSceneCull::projector_allocate(){
+	return projector_owner.allocate_rid();
+}
+void RendererSceneCull::projector_initialize(RID p_rid){
+	projector_owner.initialize_rid(p_rid);
+
+	Projector *projector = projector_owner.get_or_null(p_rid);
+	projector->self = p_rid;
+}
+void RendererSceneCull::projector_set_source_scenario(RID p_rid, RID p_scenario){
+	Projector *projector = projector_owner.get_or_null(p_rid);
+	ERR_FAIL_NULL(projector); 
+	Scenario *scenario = scenario_owner.get_or_null(p_scenario);
+	ERR_FAIL_NULL(scenario); 
+	projector->source_scenario = scenario;
+}
+void RendererSceneCull::projector_set_target_scenario(RID p_rid, RID p_scenario){
+	Projector *projector = projector_owner.get_or_null(p_rid);
+	ERR_FAIL_NULL(projector); 
+	Scenario *scenario = scenario_owner.get_or_null(p_scenario);
+	ERR_FAIL_NULL(scenario); 
+	projector->target_scenario = scenario; 
+}
+
+inline void RendererSceneCull::_instance_sync_data(Instance *instance_from,Instance *instance_to){ 
+	if(instance_to->base!=instance_from->base)
+		instance_set_base(instance_to->self,instance_from->base);
+	
+	if(instance_to->material_override!=instance_from->material_override)
+		instance_geometry_set_material_override(instance_to->self,instance_from->material_override);
+	if(instance_to->material_overlay!=instance_from->material_overlay)
+		instance_geometry_set_material_overlay(instance_to->self,instance_from->material_overlay);
+	if(instance_to->skeleton!=instance_from->skeleton)
+		instance_attach_skeleton(instance_to->self,instance_from->skeleton);
+	
+	if(instance_to->visibility_range_begin!=instance_from->visibility_range_begin
+		||instance_to->visibility_range_end!=instance_from->visibility_range_end
+		||instance_to->visibility_range_begin_margin!=instance_from->visibility_range_begin_margin
+		||instance_to->visibility_range_end_margin!=instance_from->visibility_range_end_margin
+		||instance_to->visibility_range_fade_mode!=instance_from->visibility_range_fade_mode)
+		instance_geometry_set_visibility_range(instance_to->self,
+			instance_from->visibility_range_begin,
+			instance_from->visibility_range_end,
+			instance_from->visibility_range_begin_margin,
+			instance_from->visibility_range_end_margin,
+			instance_from->visibility_range_fade_mode);
+
+	if(instance_from->visible!=instance_to->visible)
+		instance_set_visible(instance_to->self,instance_from->visible);
+	if(instance_from->ignore_all_culling!=instance_to->ignore_all_culling)
+		instance_set_ignore_culling(instance_to->self,instance_from->ignore_all_culling);
+	if(instance_from->layer_mask!=instance_to->layer_mask)
+		instance_set_layer_mask(instance_to->self,instance_from->layer_mask);
+	if(instance_from->cast_shadows!=instance_to->cast_shadows)
+		instance_geometry_set_cast_shadows_setting(instance_to->self,instance_from->cast_shadows);
+
+		
+} 
+
+void RendererSceneCull::projector_update(RID p_projector, Transform3D global_transform) {
+	Projector *projector = projector_owner.get_or_null(p_projector);
+	ERR_FAIL_NULL(projector); 
+	ERR_FAIL_NULL(projector->source_scenario); 
+	ERR_FAIL_NULL(projector->target_scenario);  
+
+	//clean projections for removed instances
+	LocalVector<Instance *> erase; 
+	for (auto &&i : projector->projections)
+	{
+		if(i.value->projection_source.is_null() || !instance_owner.owns(i.value->projection_source)){
+			erase.push_back(i.key); 
+		}
+	}
+	for (int i = 0; i < erase.size(); i++)
+	{
+		Instance * src = erase[i];
+		free(projector->projections.get(src)->self);
+		projector->projections.erase(src);
+	}
+	
+	
+	SelfList<Instance> *element = projector->source_scenario->instances.first();
+	while(element)
+	{
+		Instance * source = element->self();
+		Instance * target = nullptr;
+		if(projector->projections.has(source)){
+			target = projector->projections[source];
+		}
+		else{
+			RID instance_rid = instance_owner.allocate_rid();  
+			instance_owner.initialize_rid(instance_rid);
+			target = instance_owner.get_or_null(instance_rid);
+			target->self = instance_rid;
+			target->projection_source = source->self; 
+			instance_set_scenario(target->self,projector->target_scenario->self);
+			projector->projections[source] = target;
+		}  
+		_instance_sync_data(source,target); 
+		instance_set_transform(target->self, global_transform * source->transform);
+		element = element->next();
+	} 
+	
+}
+bool RendererSceneCull::is_projector(RID p_projector) const{
+	return projector_owner.owns(p_projector);
+}
+
+
+
+TypedArray<RID> RendererSceneCull::instance_get_all() const{
+	LocalVector<RID> list = instance_owner.get_owned_list();
+	TypedArray<RID> instances = TypedArray<RID>();
+	instances.resize(list.size());
+	for (int i = 0; i < list.size(); i++)
+	{
+		instances[i] = list[i];
+	} 
+	return instances;
+}
+RID RendererSceneCull::instance_get_base(RID p_instance) const{
+	Instance *instance = instance_owner.get_or_null(p_instance);
+	ERR_FAIL_NULL_V(instance,RID()); 
+	return instance->base;
+}
+RID RendererSceneCull::instance_get_scenario(RID p_instance) const{
+	Instance *instance = instance_owner.get_or_null(p_instance);
+	ERR_FAIL_NULL_V(instance,RID()); 
+	if(instance->scenario) return instance->scenario->self;
+	return RID();
+}
+Dictionary RendererSceneCull::instance_get_data(RID p_instance) const{
+	Instance *instance = instance_owner.get_or_null(p_instance);
+	ERR_FAIL_NULL_V(instance,Dictionary()); 
+	Dictionary data = Dictionary();
+	data["base"] = instance->base; 
+	data["scenario"] = instance->scenario ? instance->scenario->self : RID();
+	data["skeleton"] = instance->skeleton;
+	data["material_override"] = instance->material_override;
+	data["material_overlay"] = instance->material_overlay;
+	data["mesh_instance"] = instance->mesh_instance;
+	data["transform"] = instance->transform;
+	data["lod_bias"] = instance->lod_bias;
+	
+	data["visibility_range_begin"] 		= instance->visibility_range_begin;
+	data["visibility_range_end"] 			= instance->visibility_range_end;
+	data["visibility_range_begin_margin"] = instance->visibility_range_begin_margin;
+	data["visibility_range_end_margin"] 	= instance->visibility_range_end_margin;
+	
+	data["transparency"] 	= instance->transparency;
+
+	data["version"] 	= instance->version;
+	
+	return data;
+}
+Transform3D RendererSceneCull::instance_get_transform(RID p_instance) const{
+	Instance *instance = instance_owner.get_or_null(p_instance);
+	ERR_FAIL_NULL_V(instance,Transform3D()); 
+	return instance->transform;
+}
+TypedArray<RID> RendererSceneCull::scenario_get_instances(RID p_scenario) const{
+	Scenario *scenario = scenario_owner.get_or_null(p_scenario);
+	ERR_FAIL_NULL_V(scenario,TypedArray<RID>()); 
+	TypedArray<RID> instances = TypedArray<RID>();
+	SelfList<Instance> *element = scenario->instances.first();
+	while(element)
+	{
+		instances.push_back(element->self()->self);
+		element = element->next();
+	} 
+	return instances;
+}
+void RendererSceneCull::instance_clone_data(RID p_instance_from, RID p_instance_to){
+	Instance *instance_from = instance_owner.get_or_null(p_instance_from);
+	if(instance_from==nullptr) return;
+	Instance *instance_to = instance_owner.get_or_null(p_instance_to);
+	ERR_FAIL_NULL(instance_to); 
+	
+	_instance_sync_data(instance_from,instance_to);
+}
+	
+
+//custom end
+
 void RendererSceneCull::instance_set_base(RID p_instance, RID p_base) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
 	ERR_FAIL_NULL(instance);
@@ -4163,7 +4350,17 @@ bool RendererSceneCull::free(RID p_rid) {
 	if (scene_render->free(p_rid)) {
 		return true;
 	}
-
+	//custom 
+	if (projector_owner.owns(p_rid)) {
+		Projector *projector = projector_owner.get_or_null(p_rid);
+		for (auto &&i : projector->projections)//cleanup projections
+		{
+			free(i.value->self);
+		} 
+		projector_owner.free(p_rid);
+		return true;
+	}
+	//
 	if (camera_owner.owns(p_rid)) {
 		camera_owner.free(p_rid);
 

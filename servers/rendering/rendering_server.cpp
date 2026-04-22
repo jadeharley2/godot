@@ -3279,6 +3279,22 @@ void RenderingServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("instances_cull_ray", "from", "to", "scenario"), &RenderingServer::_instances_cull_ray_bind, DEFVAL(RID()));
 	ClassDB::bind_method(D_METHOD("instances_cull_convex", "convex", "scenario"), &RenderingServer::_instances_cull_convex_bind, DEFVAL(RID()));
 
+
+	//custom
+	ClassDB::bind_method(D_METHOD("projector_create" ), &RenderingServer::projector_create);
+	ClassDB::bind_method(D_METHOD("projector_set_source_scenario","projector","scenario" ), &RenderingServer::projector_set_source_scenario);
+	ClassDB::bind_method(D_METHOD("projector_set_target_scenario","projector","scenario" ), &RenderingServer::projector_set_target_scenario);
+	ClassDB::bind_method(D_METHOD("projector_update","projector","global_transform"), &RenderingServer::projector_update);
+
+	ClassDB::bind_method(D_METHOD("instance_get_all" ), &RenderingServer::instance_get_all);
+	ClassDB::bind_method(D_METHOD("instance_get_base","instance" ), &RenderingServer::instance_get_base);
+	ClassDB::bind_method(D_METHOD("instance_get_scenario","instance" ), &RenderingServer::instance_get_scenario);
+	ClassDB::bind_method(D_METHOD("instance_get_data","instance" ), &RenderingServer::instance_get_data); 
+	ClassDB::bind_method(D_METHOD("instance_get_transform","instance" ), &RenderingServer::instance_get_transform);
+	ClassDB::bind_method(D_METHOD("scenario_get_instances","scenario" ), &RenderingServer::scenario_get_instances);
+	//
+
+
 	BIND_ENUM_CONSTANT(INSTANCE_NONE);
 	BIND_ENUM_CONSTANT(INSTANCE_MESH);
 	BIND_ENUM_CONSTANT(INSTANCE_MULTIMESH);
