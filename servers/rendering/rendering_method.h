@@ -79,6 +79,8 @@ public:
 
 	virtual void projector_set_source_scenario(RID p_rid, RID p_scenario) = 0;
 	virtual void projector_set_target_scenario(RID p_rid, RID p_scenario) = 0;
+	virtual void projector_set_type_filter(RID p_rid, uint32_t filter) = 0;
+	virtual void projector_set_layer_mask(RID p_rid, uint32_t mask) = 0; 
 	virtual void projector_update(RID p_projector, Transform3D global_transform) = 0;
 	virtual bool is_projector(RID p_projector) const = 0;
 

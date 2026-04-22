@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<class name="Projector3D" inherits="Node3D" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../class.xsd">
+	<brief_description>
+		Projects a [World3D] Scene.
+	</brief_description>
+	<description>
+		Projects a [World3D] Scene into different [World3D] with custom transformation.
+	</description>
+	<tutorials>
+	</tutorials>
+	<methods>
+		<method name="get_layer_mask_value" qualifiers="const">
+			<return type="bool" />
+			<param index="0" name="layer_number" type="int" />
+			<description>
+				Returns whether or not the specified layer of the [member layers] is enabled, given a [param layer_number] between 1 and 20.
+			</description>
+		</method>
+		<method name="set_layer_mask_value">
+			<return type="void" />
+			<param index="0" name="layer_number" type="int" />
+			<param index="1" name="value" type="bool" />
+			<description>
+				Based on [param value], enables or disables the specified layer in the [member layers], given a [param layer_number] between 1 and 20.
+			</description>
+		</method>
+	</methods>
+	<members>
+		<member name="source_camera" type="NodePath" setter="set_source_camera" getter="get_source_camera" default="NodePath(&quot;&quot;)">
+			Camera inside target [World3D].
+		</member>
+		<member name="layer_mask" type="int" setter="set_layer_mask" getter="get_layer_mask" default="1">
+			The render layer(s) this [Projector3D] will project. 
+		</member>
+		<member name="type_mask" type="int" setter="set_type_mask" getter="get_type_mask" default="1">
+			The instance type(s) this [Projector3D] will project. 
+		</member>
+	</members>
+</class>

@@ -596,7 +596,7 @@ void RendererSceneCull::projector_set_target_scenario(RID p_rid, RID p_scenario)
 	projector->target_scenario = scenario; 
 }
 
-inline void RendererSceneCull::_instance_sync_data(Instance *instance_from,Instance *instance_to){ 
+inline void RendererSceneCull::_instance_sync_data(Instance *instance_from, Instance *instance_to){ 
 	if(instance_to->base!=instance_from->base)
 		instance_set_base(instance_to->self,instance_from->base);
 	
@@ -627,8 +627,10 @@ inline void RendererSceneCull::_instance_sync_data(Instance *instance_from,Insta
 		instance_set_layer_mask(instance_to->self,instance_from->layer_mask);
 	if(instance_from->cast_shadows!=instance_to->cast_shadows)
 		instance_geometry_set_cast_shadows_setting(instance_to->self,instance_from->cast_shadows);
-
-		
+	if(instance_from->transparency!=instance_to->transparency)
+		instance_geometry_set_transparency(instance_to->self,instance_from->transparency);
+	//if(instance_from->instance_uniforms!=instance_to->instance_uniforms)
+	//	instance_to->instance_uniforms = instance_from->instance_uniforms;
 } 
 
 void RendererSceneCull::projector_update(RID p_projector, Transform3D global_transform) {
@@ -636,16 +638,19 @@ void RendererSceneCull::projector_update(RID p_projector, Transform3D global_tra
 	ERR_FAIL_NULL(projector); 
 	ERR_FAIL_NULL(projector->source_scenario); 
 	ERR_FAIL_NULL(projector->target_scenario);  
-
+	ERR_FAIL_COND_MSG(projector->source_scenario == projector->target_scenario,"Projector source and target sceraios is same!");
 	//clean projections for removed instances
 	LocalVector<Instance *> erase; 
 	for (auto &&i : projector->projections)
 	{
-		if(i.value->projection_source.is_null() || !instance_owner.owns(i.value->projection_source)){
+		if(i.value->projection_source.is_null() 
+			|| !instance_owner.owns(i.value->projection_source)
+			|| (i.value->layer_mask & projector->layer_mask) == 0
+			|| ((1<<i.value->base_type) & projector->type_filter) == 0 ){
 			erase.push_back(i.key); 
 		}
 	}
-	for (int i = 0; i < erase.size(); i++)
+	for (uint32_t i = 0; i < erase.size(); i++)
 	{
 		Instance * src = erase[i];
 		free(projector->projections.get(src)->self);
@@ -657,24 +662,38 @@ void RendererSceneCull::projector_update(RID p_projector, Transform3D global_tra
 	while(element)
 	{
 		Instance * source = element->self();
-		Instance * target = nullptr;
-		if(projector->projections.has(source)){
-			target = projector->projections[source];
+		if(((1<<source->base_type) & projector->type_filter)
+			&&(source->layer_mask & projector->layer_mask))
+		{
+			Instance * target = nullptr;
+			if(projector->projections.has(source)){
+				target = projector->projections[source];
+			}
+			else{
+				RID instance_rid = instance_owner.allocate_rid();  
+				instance_owner.initialize_rid(instance_rid);
+				target = instance_owner.get_or_null(instance_rid);
+				target->self = instance_rid;
+				target->projection_source = source->self; 
+				instance_set_scenario(target->self,projector->target_scenario->self);
+				projector->projections[source] = target;
+			}  
+			_instance_sync_data(source,target); 
+			instance_set_transform(target->self, global_transform * source->transform);
 		}
-		else{
-			RID instance_rid = instance_owner.allocate_rid();  
-			instance_owner.initialize_rid(instance_rid);
-			target = instance_owner.get_or_null(instance_rid);
-			target->self = instance_rid;
-			target->projection_source = source->self; 
-			instance_set_scenario(target->self,projector->target_scenario->self);
-			projector->projections[source] = target;
-		}  
-		_instance_sync_data(source,target); 
-		instance_set_transform(target->self, global_transform * source->transform);
 		element = element->next();
 	} 
 	
+}
+void RendererSceneCull::projector_set_type_filter(RID p_rid, uint32_t filter){
+	Projector *projector = projector_owner.get_or_null(p_rid);
+	ERR_FAIL_NULL(projector); 
+	projector->type_filter = filter;
+}
+void RendererSceneCull::projector_set_layer_mask(RID p_rid, uint32_t mask){
+	Projector *projector = projector_owner.get_or_null(p_rid);
+	ERR_FAIL_NULL(projector); 
+	projector->layer_mask = mask;
 }
 bool RendererSceneCull::is_projector(RID p_projector) const{
 	return projector_owner.owns(p_projector);
@@ -686,7 +705,7 @@ TypedArray<RID> RendererSceneCull::instance_get_all() const{
 	LocalVector<RID> list = instance_owner.get_owned_list();
 	TypedArray<RID> instances = TypedArray<RID>();
 	instances.resize(list.size());
-	for (int i = 0; i < list.size(); i++)
+	for (uint32_t i = 0; i < list.size(); i++)
 	{
 		instances[i] = list[i];
 	} 

@@ -944,6 +944,8 @@ public:
 	FUNCRIDSPLIT(projector)
 	FUNC2(projector_set_source_scenario, RID, RID)
 	FUNC2(projector_set_target_scenario, RID, RID)
+	FUNC2(projector_set_type_filter, RID, uint32_t)
+	FUNC2(projector_set_layer_mask, RID, uint32_t)
 	FUNC2(projector_update, RID, Transform3D)
 
 

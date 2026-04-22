@@ -3284,6 +3284,8 @@ void RenderingServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("projector_create" ), &RenderingServer::projector_create);
 	ClassDB::bind_method(D_METHOD("projector_set_source_scenario","projector","scenario" ), &RenderingServer::projector_set_source_scenario);
 	ClassDB::bind_method(D_METHOD("projector_set_target_scenario","projector","scenario" ), &RenderingServer::projector_set_target_scenario);
+	ClassDB::bind_method(D_METHOD("projector_set_type_filter","projector","filter" ), &RenderingServer::projector_set_type_filter);
+	ClassDB::bind_method(D_METHOD("projector_set_layer_mask","projector","mask" ), &RenderingServer::projector_set_layer_mask);
 	ClassDB::bind_method(D_METHOD("projector_update","projector","global_transform"), &RenderingServer::projector_update);
 
 	ClassDB::bind_method(D_METHOD("instance_get_all" ), &RenderingServer::instance_get_all);

@@ -388,6 +388,10 @@ public:
 		Scenario *source_scenario = nullptr;
 		Scenario *target_scenario = nullptr;
 		
+		//RS::InstanceType
+		uint32_t type_filter = RS::INSTANCE_GEOMETRY_MASK | (1<<RS::INSTANCE_LIGHT) | (1<<RS::INSTANCE_DECAL) | (1<<RS::INSTANCE_FOG_VOLUME);
+		uint32_t layer_mask = 1;
+
 		HashMap<Instance *,Instance *> projections;
 		
 	};
@@ -397,8 +401,10 @@ public:
 	virtual void projector_initialize(RID p_rid);
 	virtual void projector_set_source_scenario(RID p_rid, RID p_scenario);
 	virtual void projector_set_target_scenario(RID p_rid, RID p_scenario);
+	virtual void projector_set_type_filter(RID p_rid, uint32_t filter);
+	virtual void projector_set_layer_mask(RID p_rid, uint32_t mask);
 	inline void _instance_sync_data(Instance *instance_from,Instance *instance_to);
-	virtual void projector_update(RID p_projector, Transform3D global_transform);
+	virtual void projector_update(RID p_projector, Transform3D global_transform); 
 	virtual bool is_projector(RID p_projector) const;
 
 	/* INSTANCING API */
