@@ -663,7 +663,8 @@ void RendererSceneCull::projector_update(RID p_projector, Transform3D global_tra
 	{
 		Instance * source = element->self();
 		if(((1<<source->base_type) & projector->type_filter)
-			&&(source->layer_mask & projector->layer_mask))
+			&&(source->layer_mask & projector->layer_mask) 
+			&&(source->projection_source.is_null()))
 		{
 			Instance * target = nullptr;
 			if(projector->projections.has(source)){
