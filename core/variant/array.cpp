@@ -740,6 +740,35 @@ void Array::sort_custom(const Callable &p_callable) {
 	_p->array.sort_custom<CallableComparator, true>(p_callable);
 }
 
+void Array::sort_by_key(const Callable &p_callable) {
+	ERR_FAIL_COND_MSG(_p->read_only, "Array is in read-only state.");
+	int array_size = size();
+	if (array_size<2) {
+		return;
+	} 
+
+	Vector<KeyPair<Variant,Variant>> keypairs;
+	keypairs.resize(array_size);
+	for (int i = 1; i < array_size; i++) {
+		const Variant *args[1] = { &_p->array[i] };
+		Callable::CallError err;
+		Variant res;
+		p_callable.callp(args, 1, res, err);
+		ERR_FAIL_COND_EDMSG(err.error != Callable::CallError::CALL_OK,
+				"Error calling key extraction method: " + Variant::get_callable_error_text(p_callable, args, 1, err));
+	
+		KeyPair<Variant,Variant> pair;
+		pair.key = res;
+		pair.value = *args[0];
+		keypairs.write[i] = pair;
+	}
+ 
+	keypairs.sort_custom<KeyPairComparator<Variant,Variant>>();
+	for (int i = 1; i < array_size; i++) {
+		_p->array.set(i, keypairs[i].value);
+	} 
+}
+
 void Array::shuffle() {
 	ERR_FAIL_COND_MSG(_p->read_only, "Array is in read-only state.");
 	const int n = _p->array.size();
