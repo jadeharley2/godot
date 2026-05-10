@@ -47,7 +47,9 @@
 #include "core/string/translation_server.h"
 #include "core/templates/rb_set.h"
 #include "core/variant/variant_parser.h"
+#include "core/profiling/profiling.h"
 #include "servers/rendering/rendering_server.h"
+
 
 #ifdef DEBUG_LOAD_THREADED
 #define print_lt(m_text) print_line(m_text)
@@ -335,6 +337,7 @@ Ref<Resource> ResourceLoader::_load(const String &p_path, const String &p_origin
 // This implementation must allow re-entrancy for a task that started awaiting in a deeper stack frame.
 // The load task token must be manually re-referenced before this is called, which includes threaded runs.
 void ResourceLoader::_run_load_task(void *p_userdata) {
+	GodotProfileZone("load_task");
 	ThreadLoadTask &load_task = *(ThreadLoadTask *)p_userdata;
 	int thread_index = WorkerThreadPool::get_singleton()->get_thread_index();
 	String thread_waiting_on_backup;
@@ -723,6 +726,7 @@ void ResourceLoader::_load_threaded_request_setup_user_token(LoadToken *p_token,
 }
 
 Ref<Resource> ResourceLoader::load(const String &p_path, const String &p_type_hint, CacheMode p_cache_mode, Error *r_error) {
+	GodotProfileZone("load");
 	if (r_error) {
 		*r_error = OK;
 	}
