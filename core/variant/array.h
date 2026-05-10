@@ -44,6 +44,21 @@ class Variant;
 struct ArrayPrivate;
 struct ContainerType;
 
+
+template <typename TKey, typename TValue>
+struct KeyPair {
+	TKey key;
+	TValue value;
+};
+template <typename TKey, typename TValue>
+struct KeyPairComparator {
+	_ALWAYS_INLINE_ bool operator()(
+		const KeyPair<TKey,TValue> &p_a, 
+		const KeyPair<TKey,TValue> &p_b) const {
+		return (p_a.key < p_b.key); 
+	}
+};
+
 class Array {
 	mutable ArrayPrivate *_p;
 	void _ref(const Array &p_from) const;
@@ -134,6 +149,8 @@ public:
 
 	void sort();
 	void sort_custom(const Callable &p_callable);
+	void sort_by_key(const Callable &p_callable);
+	
 	void shuffle();
 	int bsearch(const Variant &p_value, bool p_before = true) const;
 	int bsearch_custom(const Variant &p_value, const Callable &p_callable, bool p_before = true) const;
