@@ -1,0 +1,1 @@
+scons debug_symbols=true d3d12=no profiler=tracy profiler_path=C:\_root\programs\tracy\src\tracy
