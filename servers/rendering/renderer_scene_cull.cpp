@@ -638,7 +638,6 @@ void RendererSceneCull::projector_update(RID p_projector, Transform3D global_tra
 	ERR_FAIL_NULL(projector); 
 	ERR_FAIL_NULL(projector->source_scenario); 
 	ERR_FAIL_NULL(projector->target_scenario);  
-	ERR_FAIL_COND_MSG(projector->source_scenario == projector->target_scenario,"Projector source and target sceraios is same!");
 	//clean projections for removed instances
 	LocalVector<Instance *> erase; 
 	for (auto &&i : projector->projections)
