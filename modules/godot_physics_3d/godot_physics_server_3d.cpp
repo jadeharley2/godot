@@ -437,6 +437,117 @@ void GodotPhysicsServer3D::area_set_area_monitor_callback(RID p_area, const Call
 	area->set_area_monitor_callback(p_callback.is_valid() ? p_callback : Callable());
 }
 
+/* PROJECTOR API */
+
+RID GodotPhysicsServer3D::projector_create() { 
+	RID p_rid = projector_owner.allocate_rid();
+	projector_owner.initialize_rid(p_rid); 
+	GodotCollisionProjector *projector = projector_owner.get_or_null(p_rid);
+	projector->self = p_rid;
+	return p_rid;
+}
+void GodotPhysicsServer3D::projector_set_source_space(RID p_rid, RID p_space) {
+	GodotCollisionProjector *projector = projector_owner.get_or_null(p_rid);
+	ERR_FAIL_NULL(projector); 
+	if(p_space.is_valid()){
+		GodotSpace3D *space = space_owner.get_or_null(p_space);
+		ERR_FAIL_NULL(space); 
+		projector->source_space = space;
+	}
+	else{
+		projector->source_space = nullptr;
+	}
+}
+void GodotPhysicsServer3D::projector_set_target_space(RID p_rid, RID p_space) {
+	GodotCollisionProjector *projector = projector_owner.get_or_null(p_rid);
+	ERR_FAIL_NULL(projector); 
+	if(p_space.is_valid()){
+		GodotSpace3D *space = space_owner.get_or_null(p_space);
+		ERR_FAIL_NULL(space); 
+		projector->target_space = space;
+	}
+	else{
+		projector->target_space = nullptr;
+	}
+}
+void GodotPhysicsServer3D::projector_set_layer_mask(RID p_rid, uint32_t mask) { 
+	GodotCollisionProjector *projector = projector_owner.get_or_null(p_rid);
+	ERR_FAIL_NULL(projector); 
+	projector->layer_mask = mask;
+}
+uint32_t GodotPhysicsServer3D::projector_get_layer_mask(RID p_rid) const { 
+	GodotCollisionProjector *projector = projector_owner.get_or_null(p_rid);
+	ERR_FAIL_NULL_V(projector,0); 
+	return projector->layer_mask;
+}
+void GodotPhysicsServer3D::projector_update(RID p_projector, const Transform3D &p_transform)  {
+	GodotCollisionProjector *projector = projector_owner.get_or_null(p_projector);
+	ERR_FAIL_NULL(projector); 
+	ERR_FAIL_NULL(projector->source_space); 
+	ERR_FAIL_NULL(projector->target_space);  
+	
+	LocalVector<RID> erase; 
+	for (auto &&i : projector->projections)
+	{
+		if(!body_owner.owns(i.key) 
+			|| body_owner.get_or_null(i.key)->get_space()!=projector->source_space){
+			erase.push_back(i.key);
+		}
+	}
+	for (uint32_t i = 0; i < erase.size(); i++)
+	{
+		RID src = erase[i];
+		free_rid(projector->projections.get(src));
+		projector->projections.erase(src);
+	}
+	
+	LocalVector<GodotBody3D *> add; 
+	for (auto &&src_obj : projector->source_space->get_objects())
+	{ 
+		if(!src_obj||!src_obj->is_static()) continue;
+		RID src = src_obj->get_self();
+		if(!body_owner.owns(src_obj->get_self())) continue; 
+		GodotBody3D *source = static_cast<GodotBody3D *>(src_obj);
+		if( source && source->get_type() == GodotCollisionObject3D::TYPE_BODY 
+			&& source->get_mode() == BODY_MODE_STATIC
+			&& !source->is_projection()
+			&& source->get_collision_layer() & projector->layer_mask){
+
+			int shape_count = source->get_shape_count();
+			if(shape_count==0) continue;
+
+			
+			GodotBody3D *target;
+			
+			if(projector->projections.has(src)){  
+				target = body_owner.get_or_null(projector->projections[src]);
+			}else{
+				RID dst = body_create();
+				target = body_owner.get_or_null(dst);
+				target->set_is_projection(true);
+				target->set_mode(BODY_MODE_STATIC);
+				add.push_back(target); 
+				ObjectID instance_id = source->get_instance_id();
+				if(instance_id.is_valid()) 
+					target->set_instance_id(instance_id);
+				for (int i = 0; i < shape_count; i++)
+				{ 
+					target->add_shape(
+						source->get_shape(i), 
+						source->get_shape_transform(i),
+						source->is_shape_disabled(i)); 
+				} 
+				projector->projections[src] = dst;
+			} 
+			target->set_state(BODY_STATE_TRANSFORM, p_transform * source->get_transform() );
+		}
+	} 
+	for (uint32_t i = 0; i < add.size(); i++)
+	{
+		add[i]->set_space(projector->target_space);
+	}
+}
+
 /* BODY API */
 
 RID GodotPhysicsServer3D::body_create() {
@@ -1658,6 +1769,13 @@ void GodotPhysicsServer3D::free_rid(RID p_rid) {
 		joint_owner.free(p_rid);
 		memdelete(joint);
 
+	} else if (projector_owner.owns(p_rid)) {
+		GodotCollisionProjector *projector = projector_owner.get_or_null(p_rid);
+		for (auto &&i : projector->projections)//cleanup projections
+		{
+			free_rid(i.value);
+		} 
+		projector_owner.free(projector->self); 
 	} else {
 		ERR_FAIL_MSG("Invalid ID.");
 	}

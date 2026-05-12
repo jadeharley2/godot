@@ -62,6 +62,22 @@ class GodotPhysicsServer3D : public PhysicsServer3D {
 	mutable RID_PtrOwner<GodotSoftBody3D, true> soft_body_owner;
 	mutable RID_PtrOwner<GodotJoint3D, true> joint_owner;
 
+
+	//custom  
+	struct GodotCollisionProjector {
+		RID self;
+
+		GodotSpace3D *source_space = nullptr;
+		GodotSpace3D *target_space = nullptr;
+		
+		uint32_t layer_mask = ~0;
+
+		HashMap<RID,RID> projections;
+		
+	};
+	mutable RID_Owner<GodotCollisionProjector, true> projector_owner;
+
+
 	//void _clear_query(QuerySW *p_query);
 	friend class GodotCollisionObject3D;
 	SelfList<GodotCollisionObject3D>::List pending_shape_update_list;
@@ -158,6 +174,16 @@ public:
 	virtual void area_set_monitor_callback(RID p_area, const Callable &p_callback) override;
 	virtual void area_set_area_monitor_callback(RID p_area, const Callable &p_callback) override;
 
+	/* PROJECTOR API */
+	
+	virtual RID projector_create() override;
+	virtual void projector_set_source_space(RID p_rid, RID p_space) override;
+	virtual void projector_set_target_space(RID p_rid, RID p_space) override; 
+	virtual void projector_set_layer_mask(RID p_rid, uint32_t mask) override;
+	virtual uint32_t projector_get_layer_mask(RID p_rid) const override;
+	virtual void projector_update(RID p_projector, const Transform3D &p_transform) override;
+
+	
 	/* BODY API */
 
 	// create a body of a given type

@@ -145,6 +145,8 @@ class GodotBody3D : public GodotCollisionObject3D {
 
 	uint64_t island_step = 0;
 
+	bool _is_projection=false;
+
 	void _update_transform_dependent();
 
 	friend class GodotPhysicsDirectBodyState3D; // i give up, too many functions to expose
@@ -315,6 +317,10 @@ public:
 
 	void set_axis_lock(PhysicsServer3D::BodyAxis p_axis, bool lock);
 	bool is_axis_locked(PhysicsServer3D::BodyAxis p_axis) const;
+
+	
+	_FORCE_INLINE_ void set_is_projection(bool value) { _is_projection = value; }
+	_FORCE_INLINE_ bool is_projection() const { return _is_projection; }
 
 	void integrate_forces(real_t p_step);
 	void integrate_velocities(real_t p_step);
