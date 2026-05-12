@@ -175,6 +175,16 @@ public:
 	FUNC2(area_set_monitor_callback, RID, const Callable &);
 	FUNC2(area_set_area_monitor_callback, RID, const Callable &);
 
+	/* PROJECTOR API */
+	
+	FUNCRID(projector);
+	FUNC2(projector_set_source_space,RID, RID);
+	FUNC2(projector_set_target_space,RID, RID);
+	FUNC2(projector_set_layer_mask,RID, uint32_t);
+	FUNC1RC(uint32_t,projector_get_layer_mask,RID);
+	FUNC2(projector_update,RID, const Transform3D &);
+
+
 	/* BODY API */
 
 	//FUNC2RID(body,BodyMode,bool);

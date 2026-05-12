@@ -759,6 +759,13 @@ void PhysicsServer3D::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("area_set_ray_pickable", "area", "enable"), &PhysicsServer3D::area_set_ray_pickable);
 
+	ClassDB::bind_method(D_METHOD("projector_create"), &PhysicsServer3D::projector_create);
+	ClassDB::bind_method(D_METHOD("projector_set_source_space","projector","space"), &PhysicsServer3D::projector_set_source_space);
+	ClassDB::bind_method(D_METHOD("projector_set_target_space","projector","space"), &PhysicsServer3D::projector_set_target_space);
+	ClassDB::bind_method(D_METHOD("projector_set_layer_mask","projector","mask"), &PhysicsServer3D::projector_set_layer_mask);
+	ClassDB::bind_method(D_METHOD("projector_get_layer_mask","projector"), &PhysicsServer3D::projector_get_layer_mask);
+	ClassDB::bind_method(D_METHOD("projector_update","projector","transform"), &PhysicsServer3D::projector_update);
+
 	ClassDB::bind_method(D_METHOD("body_create"), &PhysicsServer3D::body_create);
 
 	ClassDB::bind_method(D_METHOD("body_set_space", "body", "space"), &PhysicsServer3D::body_set_space);

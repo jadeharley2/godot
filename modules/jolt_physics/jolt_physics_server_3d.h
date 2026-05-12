@@ -204,6 +204,16 @@ public:
 	virtual void area_set_monitor_callback(RID p_area, const Callable &p_callback) override;
 	virtual void area_set_area_monitor_callback(RID p_area, const Callable &p_callback) override;
 
+	/* PROJECTOR API */
+	
+	virtual RID projector_create() override { return RID();};
+	virtual void projector_set_source_space(RID p_rid, RID p_space) override {};
+	virtual void projector_set_target_space(RID p_rid, RID p_space) override {};
+	virtual void projector_set_layer_mask(RID p_rid, uint32_t mask) override {};
+	virtual uint32_t projector_get_layer_mask(RID p_rid) const override {return 0;};
+	virtual void projector_update(RID p_projector, const Transform3D &p_transform) override {};
+
+	
 	virtual RID body_create() override;
 
 	virtual void body_set_space(RID p_body, RID p_space) override;

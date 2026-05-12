@@ -288,6 +288,16 @@ public:
 	EXBIND2(area_set_monitor_callback, RID, const Callable &)
 	EXBIND2(area_set_area_monitor_callback, RID, const Callable &)
 
+	/* PROJECTOR API */
+	
+	EXBIND0R(RID, projector_create)
+	EXBIND2(projector_set_source_space,RID, RID)
+	EXBIND2(projector_set_target_space,RID, RID)
+	EXBIND2(projector_set_layer_mask,RID, uint32_t)
+	EXBIND1RC(uint32_t,projector_get_layer_mask,RID)
+	EXBIND2(projector_update,RID, const Transform3D &)
+
+
 	/* BODY API */
 
 	//EXBIND2RID(body,BodyMode,bool);

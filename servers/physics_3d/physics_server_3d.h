@@ -382,6 +382,15 @@ public:
 
 	virtual void area_set_ray_pickable(RID p_area, bool p_enable) = 0;
 
+	/* PROJECTOR API */
+	
+	virtual RID projector_create() = 0;
+	virtual void projector_set_source_space(RID p_rid, RID p_space) = 0;
+	virtual void projector_set_target_space(RID p_rid, RID p_space) = 0;
+	virtual void projector_set_layer_mask(RID p_rid, uint32_t mask) = 0;
+	virtual uint32_t projector_get_layer_mask(RID p_rid) const = 0;
+	virtual void projector_update(RID p_projector, const Transform3D &p_transform) = 0;
+
 	/* BODY API */
 
 	//missing ccd?
