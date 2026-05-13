@@ -63,6 +63,10 @@ const SourceLocationData *intern_source_location(const void *p_function_ptr, con
 #define GodotProfileZone(m_zone_name) ZoneNamedN(GD_UNIQUE_NAME(__godot_tracy_szone_), m_zone_name, true)
 #define GodotProfileZoneGroupedFirst(m_group_name, m_zone_name) ZoneNamedN(__godot_tracy_zone_##m_group_name, m_zone_name, true)
 #define GodotProfileZoneGroupedEndEarly(m_group_name, m_zone_name) __godot_tracy_zone_##m_group_name.~ScopedZone();
+
+#define GodotProfileZoneScoped(m_zone_name) ZoneScopedN(m_zone_name)
+#define GodotProfileZoneText(m_text) ZoneText(m_text.utf8().get_data(), m_text.length())
+
 #ifndef TRACY_CALLSTACK
 #define GodotProfileZoneGrouped(m_group_name, m_zone_name) \
 	GodotProfileZoneGroupedEndEarly(m_group_name, m_zone_name); \
@@ -175,6 +179,9 @@ struct PerfettoScriptTracer {
 #define GodotProfileAlloc(m_ptr, m_size)
 #define GodotProfileFree(m_ptr)
 
+#define GodotProfileZoneScoped(m_zone_name)
+#define GodotProfileZoneText(m_text)
+
 void godot_init_profiler();
 void godot_cleanup_profiler();
 
@@ -235,6 +242,9 @@ private:
 #define GodotProfileAlloc(m_ptr, m_size)
 #define GodotProfileFree(m_ptr)
 
+#define GodotProfileZoneScoped(m_zone_name)
+#define GodotProfileZoneText(m_text)
+
 void godot_init_profiler();
 void godot_cleanup_profiler();
 
@@ -261,6 +271,9 @@ void godot_cleanup_profiler();
 // Tell the profiling backend that an allocation was freed.
 // There must be a one to one correspondence of GodotProfileAlloc and GodotProfileFree calls.
 #define GodotProfileFree(m_ptr)
+
+#define GodotProfileZoneScoped(m_zone_name)
+#define GodotProfileZoneText(m_text)
 
 // Define a zone for a script call (dynamic source location).
 // m_ptr is a pointer to the function instance, which will be used for the lookup.

@@ -337,10 +337,12 @@ Ref<Resource> ResourceLoader::_load(const String &p_path, const String &p_origin
 // This implementation must allow re-entrancy for a task that started awaiting in a deeper stack frame.
 // The load task token must be manually re-referenced before this is called, which includes threaded runs.
 void ResourceLoader::_run_load_task(void *p_userdata) {
-	GodotProfileZone("load_task");
+    GodotProfileZoneScoped("load_file");
 	ThreadLoadTask &load_task = *(ThreadLoadTask *)p_userdata;
+	GodotProfileZoneText(load_task.local_path);
 	int thread_index = WorkerThreadPool::get_singleton()->get_thread_index();
 	String thread_waiting_on_backup;
+	
 
 	bool wait = false;
 	{
