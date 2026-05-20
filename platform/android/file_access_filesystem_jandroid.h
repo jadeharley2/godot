@@ -94,6 +94,7 @@ public:
 	static void terminate();
 
 	virtual uint64_t _get_modified_time(const String &p_file) override;
+	virtual uint64_t _get_changed_time(const String &p_file) override {return 0;};
 	virtual uint64_t _get_access_time(const String &p_file) override;
 	virtual int64_t _get_size(const String &p_file) override;
 	virtual BitField<FileAccess::UnixPermissionFlags> _get_unix_permissions(const String &p_file) override { return 0; }
