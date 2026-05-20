@@ -284,6 +284,14 @@ uint64_t FileAccessEncrypted::_get_modified_time(const String &p_file) {
 	}
 }
 
+uint64_t FileAccessEncrypted::_get_changed_time(const String &p_file) {
+	if (file.is_valid()) {
+		return file->get_changed_time(p_file);
+	} else {
+		return 0;
+	}
+}
+
 uint64_t FileAccessEncrypted::_get_access_time(const String &p_file) {
 	if (file.is_valid()) {
 		return file->get_access_time(p_file);

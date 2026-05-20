@@ -349,6 +349,14 @@ uint64_t FileAccessCompressed::_get_modified_time(const String &p_file) {
 	}
 }
 
+uint64_t FileAccessCompressed::_get_changed_time(const String &p_file) {
+	if (f.is_valid()) {
+		return f->get_changed_time(p_file);
+	} else {
+		return 0;
+	}
+}
+
 uint64_t FileAccessCompressed::_get_access_time(const String &p_file) {
 	if (f.is_valid()) {
 		return f->get_access_time(p_file);

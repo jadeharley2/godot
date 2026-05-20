@@ -716,6 +716,17 @@ uint64_t FileAccess::get_modified_time(const String &p_file) {
 	return fa->_get_modified_time(p_file);
 }
 
+uint64_t FileAccess::get_changed_time(const String &p_file) {
+	if (PackedData::get_singleton() && !PackedData::get_singleton()->is_disabled() && (PackedData::get_singleton()->has_path(p_file) || PackedData::get_singleton()->has_directory(p_file))) {
+		return 0;
+	}
+
+	Ref<FileAccess> fa = create_for_path(p_file);
+	ERR_FAIL_COND_V_MSG(fa.is_null(), 0, vformat("Cannot create FileAccess for path '%s'.", p_file));
+
+	return fa->_get_changed_time(p_file);
+}
+
 uint64_t FileAccess::get_access_time(const String &p_file) {
 	if (PackedData::get_singleton() && !PackedData::get_singleton()->is_disabled() && (PackedData::get_singleton()->has_path(p_file) || PackedData::get_singleton()->has_directory(p_file))) {
 		return 0;
@@ -1147,6 +1158,7 @@ void FileAccess::_bind_methods() {
 
 	ClassDB::bind_static_method("FileAccess", D_METHOD("file_exists", "path"), &FileAccess::exists);
 	ClassDB::bind_static_method("FileAccess", D_METHOD("get_modified_time", "file"), &FileAccess::get_modified_time);
+	ClassDB::bind_static_method("FileAccess", D_METHOD("get_changed_time", "file"), &FileAccess::get_changed_time);
 	ClassDB::bind_static_method("FileAccess", D_METHOD("get_access_time", "file"), &FileAccess::get_access_time);
 	ClassDB::bind_static_method("FileAccess", D_METHOD("get_size", "file"), &FileAccess::get_size);
 

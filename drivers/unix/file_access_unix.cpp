@@ -392,6 +392,19 @@ uint64_t FileAccessUnix::_get_modified_time(const String &p_file) {
 	}
 }
 
+uint64_t FileAccessUnix::_get_changed_time(const String &p_file) { 
+	String file = fix_path(p_file);
+	struct stat st = {};
+	int err = stat(file.utf8().get_data(), &st);
+
+	if (!err) {
+		if ((st.st_mode & S_IFMT) == S_IFLNK || (st.st_mode & S_IFMT) == S_IFREG || (st.st_mode & S_IFDIR) == S_IFDIR) {
+			return st.st_ctime;
+		}
+	}
+	ERR_FAIL_V_MSG(0, "Failed to get changed time for: " + p_file + "");
+}
+
 uint64_t FileAccessUnix::_get_access_time(const String &p_file) {
 	String file = fix_path(p_file);
 	struct stat st = {};
