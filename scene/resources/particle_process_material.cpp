@@ -35,6 +35,7 @@
 Mutex ParticleProcessMaterial::dirty_materials_mutex;
 SelfList<ParticleProcessMaterial>::List ParticleProcessMaterial::dirty_materials;
 Mutex ParticleProcessMaterial::shader_map_mutex;
+Mutex ParticleProcessMaterial::shader_compile_mutex;
 HashMap<ParticleProcessMaterial::MaterialKey, ParticleProcessMaterial::ShaderData, ParticleProcessMaterial::MaterialKey> ParticleProcessMaterial::shader_map;
 RBSet<String> ParticleProcessMaterial::min_max_properties;
 ParticleProcessMaterial::ShaderNames *ParticleProcessMaterial::shader_names = nullptr;
@@ -149,7 +150,7 @@ void ParticleProcessMaterial::finish_shaders() {
 
 void ParticleProcessMaterial::_update_shader() {
 	if (!_is_initialized()) {
-		_mark_ready();
+		_mark_ready();a
 	}
 
 	MaterialKey mk = _compute_key();
@@ -1199,8 +1200,13 @@ void ParticleProcessMaterial::_update_shader() {
 	// We must create the shader outside the shader_map_mutex to avoid potential deadlocks with
 	// other tasks in the WorkerThreadPool simultaneously creating materials, which
 	// may also hold the shared shader_map_mutex lock.
-	RID new_shader = RS::get_singleton()->shader_create_from_code(code);
-
+	
+	RID new_shader;
+	{ //shader parser concurrent use inside shader_create_from_code->crash
+		MutexLock lock(shader_compile_mutex);
+		new_shader = RS::get_singleton()->shader_create_from_code(code);
+	}
+	
 	MutexLock lock(shader_map_mutex);
 
 	ShaderData *v = shader_map.getptr(mk);

@@ -148,7 +148,7 @@ private:
 		int users = 0;
 	};
 
-	static Mutex shader_map_mutex;
+	static Mutex shader_map_mutex, shader_compile_mutex;
 	static HashMap<MaterialKey, ShaderData, MaterialKey> shader_map;
 	static RBSet<String> min_max_properties;
 
