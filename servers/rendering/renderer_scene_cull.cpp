@@ -629,11 +629,33 @@ inline void RendererSceneCull::_instance_sync_data(Instance *instance_from, Inst
 		instance_geometry_set_cast_shadows_setting(instance_to->self,instance_from->cast_shadows);
 	if(instance_from->transparency!=instance_to->transparency)
 		instance_geometry_set_transparency(instance_to->self,instance_from->transparency);
+	if(instance_from->materials!=instance_to->materials)
+	{
+		instance_to->materials = instance_from->materials;
+		_instance_queue_update(instance_to, false, true);
+
+		
+		//int msize = instance_from->materials.size();
+		//instance_to->materials.resize(msize);
+		//for (int i = 0; i < msize; i++)
+		//{
+		//	instance_to->materials.write[i] = instance_from->materials[i];
+		//}
+		//_instance_queue_update(instance_to, false, true);
+
+		//for (int i = 0; i < instance_from->materials.size(); i++)
+		//{
+		//	instance_set_surface_override_material(instance_to->self,i,instance_from->materials[i]);
+		//}
+	}
+
+		
+		
 	//if(instance_from->instance_uniforms!=instance_to->instance_uniforms)
 	//	instance_to->instance_uniforms = instance_from->instance_uniforms;
 } 
 
-void RendererSceneCull::projector_update(RID p_projector, Transform3D global_transform) {
+void RendererSceneCull::projector_update(RID p_projector, Transform3D global_transform, int max_allocations) {
 	Projector *projector = projector_owner.get_or_null(p_projector);
 	ERR_FAIL_NULL(projector); 
 	ERR_FAIL_NULL(projector->source_scenario); 
@@ -669,7 +691,7 @@ void RendererSceneCull::projector_update(RID p_projector, Transform3D global_tra
 			if(projector->projections.has(source)){
 				target = projector->projections[source];
 			}
-			else{
+			else if(max_allocations!=0){
 				RID instance_rid = instance_owner.allocate_rid();  
 				instance_owner.initialize_rid(instance_rid);
 				target = instance_owner.get_or_null(instance_rid);
@@ -677,9 +699,12 @@ void RendererSceneCull::projector_update(RID p_projector, Transform3D global_tra
 				target->projection_source = source->self; 
 				instance_set_scenario(target->self,projector->target_scenario->self);
 				projector->projections[source] = target;
+				max_allocations--;
 			}  
-			_instance_sync_data(source,target); 
-			instance_set_transform(target->self, global_transform * source->transform);
+			if(target){
+				_instance_sync_data(source,target); 
+				instance_set_transform(target->self, global_transform * source->transform);
+			}
 		}
 		element = element->next();
 	} 

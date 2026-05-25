@@ -8,6 +8,8 @@ class Projector3D : public Node3D {
  
 	bool project_render = true, project_collision;
 
+	int render_allocations_budget = 10000;
+
     NodePath source_path;
 
 	RID projector;
@@ -40,9 +42,14 @@ public:
 
 	void set_layer_mask(uint32_t p_mask);
 	uint32_t get_layer_mask() const;
+	
+	void set_render_allocations_budget(int value);
+	int get_render_allocations_budget() const;
 
     void set_layer_mask_value(int p_layer_number, bool p_enable);
 	bool get_layer_mask_value(int p_layer_number) const;
+
+
 
 	void set_type_mask(uint32_t p_mask);
 	uint32_t get_type_mask() const;

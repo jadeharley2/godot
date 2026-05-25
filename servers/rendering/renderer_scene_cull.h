@@ -404,7 +404,7 @@ public:
 	virtual void projector_set_type_filter(RID p_rid, uint32_t filter);
 	virtual void projector_set_layer_mask(RID p_rid, uint32_t mask);
 	inline void _instance_sync_data(Instance *instance_from,Instance *instance_to);
-	virtual void projector_update(RID p_projector, Transform3D global_transform); 
+	virtual void projector_update(RID p_projector, Transform3D global_transform, int max_allocations); 
 	virtual bool is_projector(RID p_projector) const;
 
 	/* INSTANCING API */

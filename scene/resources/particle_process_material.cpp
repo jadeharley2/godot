@@ -150,7 +150,7 @@ void ParticleProcessMaterial::finish_shaders() {
 
 void ParticleProcessMaterial::_update_shader() {
 	if (!_is_initialized()) {
-		_mark_ready();a
+		_mark_ready();
 	}
 
 	MaterialKey mk = _compute_key();

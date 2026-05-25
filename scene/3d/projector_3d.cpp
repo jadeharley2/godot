@@ -82,7 +82,7 @@ void Projector3D::_notification(int p_what) {
 		} break;
 		case NOTIFICATION_PROCESS: {
 			if(projector.is_valid()){
-                RenderingServer::get_singleton()->projector_update(projector,get_global_transform());
+                RenderingServer::get_singleton()->projector_update(projector,get_global_transform(),render_allocations_budget);
             } 
 		} break;
 		case NOTIFICATION_PHYSICS_PROCESS: { 
@@ -155,6 +155,13 @@ bool Projector3D::get_layer_mask_value(int p_layer_number) const {
 }
 
 
+void Projector3D::set_render_allocations_budget(int value){
+	render_allocations_budget = value;
+}
+int Projector3D::get_render_allocations_budget() const{
+	return render_allocations_budget;
+}
+
 void Projector3D::set_collision_layer_mask(uint32_t p_mask) {
 	physics_layers = p_mask;
     if(physics_projector.is_valid()){
@@ -225,9 +232,11 @@ void Projector3D::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("set_source_camera", "camera"), &Projector3D::set_source_camera);
 	ClassDB::bind_method(D_METHOD("get_source_camera"), &Projector3D::get_source_camera);
 	ClassDB::bind_method(D_METHOD("set_layer_mask", "mask"), &Projector3D::set_layer_mask);
-	ClassDB::bind_method(D_METHOD("get_layer_mask"), &Projector3D::get_layer_mask);
+	ClassDB::bind_method(D_METHOD("get_layer_mask"), &Projector3D::get_layer_mask); 
 	ClassDB::bind_method(D_METHOD("set_type_mask", "mask"), &Projector3D::set_type_mask);
 	ClassDB::bind_method(D_METHOD("get_type_mask"), &Projector3D::get_type_mask);
+	ClassDB::bind_method(D_METHOD("set_render_allocations_budget", "amount"), &Projector3D::set_render_allocations_budget);
+	ClassDB::bind_method(D_METHOD("get_render_allocations_budget"), &Projector3D::get_render_allocations_budget);
 	
 	ClassDB::bind_method(D_METHOD("set_collision_layer_mask", "mask"), &Projector3D::set_collision_layer_mask);
 	ClassDB::bind_method(D_METHOD("get_collision_layer_mask"), &Projector3D::get_collision_layer_mask);
@@ -242,4 +251,5 @@ void Projector3D::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "project_collision"), "set_project_collision", "get_project_collision"); 
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "collision_layer_mask", PROPERTY_HINT_LAYERS_3D_PHYSICS), "set_collision_layer_mask", "get_collision_layer_mask");
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "render_allocations_budget"), "set_render_allocations_budget", "get_render_allocations_budget");
 }
