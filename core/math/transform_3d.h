@@ -126,6 +126,9 @@ struct [[nodiscard]] Transform3D {
 		origin.z = p_tz;
 	}
 
+	Vector<uint8_t> to_byte_array() const;
+	static Transform3D from_byte_array(const Vector<uint8_t> &buffer, uint32_t offset = 0);
+
 	explicit operator String() const;
 
 	Transform3D() = default;

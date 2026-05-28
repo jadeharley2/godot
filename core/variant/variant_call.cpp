@@ -2598,6 +2598,10 @@ static void _register_variant_builtin_methods_misc() {
 	bind_method(Transform3D, is_equal_approx, sarray("xform"), varray());
 	bind_method(Transform3D, is_finite, sarray(), varray());
 
+	//custom
+	bind_method(Transform3D, to_byte_array, sarray(), varray());
+	bind_static_method(Transform3D, from_byte_array, sarray("buffer","offset"), varray());
+
 	/* Projection */
 
 	bind_static_method(Projection, create_depth_correction, sarray("flip_y"), varray());

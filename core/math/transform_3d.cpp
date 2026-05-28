@@ -198,3 +198,19 @@ Transform3D::operator String() const {
 			", Z: " + basis.get_column(2).operator String() +
 			", O: " + origin.operator String() + "]";
 }
+
+
+Vector<uint8_t> Transform3D::to_byte_array() const {
+	Vector<uint8_t> ret; 
+	size_t alloc_size = sizeof(Transform3D);
+	ret.resize(alloc_size);
+	memcpy(ret.ptrw(), this, alloc_size);
+	return ret;
+}
+Transform3D Transform3D::from_byte_array(const Vector<uint8_t> &buffer, uint32_t offset ) { 
+	size_t alloc_size = sizeof(Transform3D);
+	ERR_FAIL_COND_V_MSG((offset+alloc_size)>(uint32_t)buffer.size(), Transform3D(), "buffer out of bounds"); 
+	Transform3D val;
+	memcpy(&val, buffer.ptr() + offset, alloc_size); 
+	return val;
+}
