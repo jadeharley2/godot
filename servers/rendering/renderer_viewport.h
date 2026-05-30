@@ -303,6 +303,11 @@ public:
 	void viewport_set_vrs_update_mode(RID p_viewport, RS::ViewportVRSUpdateMode p_mode);
 	void viewport_set_vrs_texture(RID p_viewport, RID p_texture);
 
+	//custom
+	TypedArray<RID> viewport_get_all() const; 
+	bool viewport_get_active(RID p_viewport) const;
+	//custom end
+
 	void handle_timestamp(String p_timestamp, uint64_t p_cpu_time, uint64_t p_gpu_time);
 
 	void draw_viewports(bool p_swap_buffers);

@@ -771,6 +771,8 @@ public:
 	FUNC2(viewport_set_vrs_update_mode, RID, ViewportVRSUpdateMode)
 	FUNC2(viewport_set_vrs_texture, RID, RID)
 
+	FUNC0RC(TypedArray<RID>, viewport_get_all)
+	FUNC1RC(bool, viewport_get_active, RID)
 	/* COMPOSITOR EFFECT */
 
 #undef server_name
@@ -947,7 +949,6 @@ public:
 	FUNC2(projector_set_type_filter, RID, uint32_t)
 	FUNC2(projector_set_layer_mask, RID, uint32_t)
 	FUNC3(projector_update, RID, Transform3D, int)
-
 
 	FUNC0RC(TypedArray<RID>, instance_get_all)
 	FUNC1RC(RID, instance_get_base, RID)

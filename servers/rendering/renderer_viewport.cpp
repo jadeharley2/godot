@@ -1707,6 +1707,24 @@ int RendererViewport::get_num_viewports_with_motion_vectors() const {
 	return num_viewports_with_motion_vectors;
 }
 
+//custom
+TypedArray<RID> RendererViewport::viewport_get_all() const{ 
+	TypedArray<RID> viewports = TypedArray<RID>();
+	LocalVector<RID> list = viewport_owner.get_owned_list();
+	viewports.resize(list.size());
+	for (uint32_t i = 0; i < list.size(); i++)
+	{
+		viewports[i] = list[i];
+	} 
+	return viewports;
+}
+bool RendererViewport::viewport_get_active(RID p_viewport) const {
+	Viewport *viewport = viewport_owner.get_or_null(p_viewport);
+	ERR_FAIL_NULL_V(viewport,false);
+	return active_viewports.has(viewport);
+}
+//custom end
+
 RendererViewport::RendererViewport() {
 	occlusion_rays_per_thread = GLOBAL_GET("rendering/occlusion_culling/occlusion_rays_per_thread");
 }

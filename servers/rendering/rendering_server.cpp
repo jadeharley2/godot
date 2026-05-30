@@ -3288,6 +3288,8 @@ void RenderingServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("projector_set_layer_mask","projector","mask" ), &RenderingServer::projector_set_layer_mask);
 	ClassDB::bind_method(D_METHOD("projector_update","projector","global_transform","max_allocations"), &RenderingServer::projector_update);
 
+	ClassDB::bind_method(D_METHOD("viewport_get_all"), &RenderingServer::viewport_get_all);
+	ClassDB::bind_method(D_METHOD("viewport_get_active","viewport"), &RenderingServer::viewport_get_active);
 	ClassDB::bind_method(D_METHOD("instance_get_all" ), &RenderingServer::instance_get_all);
 	ClassDB::bind_method(D_METHOD("instance_get_base","instance" ), &RenderingServer::instance_get_base);
 	ClassDB::bind_method(D_METHOD("instance_get_scenario","instance" ), &RenderingServer::instance_get_scenario);

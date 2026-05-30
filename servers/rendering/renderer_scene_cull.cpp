@@ -725,7 +725,6 @@ bool RendererSceneCull::is_projector(RID p_projector) const{
 }
 
 
-
 TypedArray<RID> RendererSceneCull::instance_get_all() const{
 	LocalVector<RID> list = instance_owner.get_owned_list();
 	TypedArray<RID> instances = TypedArray<RID>();
