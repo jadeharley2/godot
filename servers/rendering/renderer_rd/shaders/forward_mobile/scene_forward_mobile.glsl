@@ -1038,7 +1038,7 @@ hvec4 fog_process(vec3 vertex) {
 
 	if (sc_use_fog_aerial_perspective()) {
 		vec3 sky_fog_color = vec3(0.0);
-		vec3 cube_view = scene_data_block.data.radiance_inverse_xform * vertex;
+		vec3 cube_view = scene_data_block.data.radiance_inverse_xform * normalize(vertex);
 		// With depth fog, aerial perspective doesn't read mipmaps so the fog is not blurred
 		// (and is suitable for open world fog fading).
 		float mip_level = 0.0;
