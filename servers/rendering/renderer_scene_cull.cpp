@@ -2258,8 +2258,11 @@ void RendererSceneCull::_update_instance_aabb(Instance *p_instance) const {
 			new_aabb = RSG::utilities->visibility_notifier_get_aabb(p_instance->base);
 		} break;
 		case RenderingServer::INSTANCE_LIGHT: {
-			new_aabb = RSG::light_storage->light_get_aabb(p_instance->base);
-
+			if (p_instance->custom_aabb) {
+				new_aabb = *p_instance->custom_aabb;
+			} else {
+				new_aabb = RSG::light_storage->light_get_aabb(p_instance->base);
+			}
 		} break;
 		case RenderingServer::INSTANCE_REFLECTION_PROBE: {
 			new_aabb = RSG::light_storage->reflection_probe_get_aabb(p_instance->base);
