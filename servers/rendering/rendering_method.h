@@ -93,6 +93,8 @@ public:
 	virtual Dictionary instance_get_data(RID p_instance) const = 0;
 	virtual Transform3D instance_get_transform(RID p_instance) const = 0;
 	virtual TypedArray<RID> scenario_get_instances(RID p_scenario) const = 0;
+	
+	virtual	bool instance_get_last_mesh_visible(RID p_instance) const = 0;
 
 	virtual void instance_set_base(RID p_instance, RID p_base) = 0;
 	virtual void instance_set_scenario(RID p_instance, RID p_scenario) = 0;

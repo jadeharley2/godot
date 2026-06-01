@@ -957,6 +957,8 @@ public:
 	FUNC1RC(Transform3D, instance_get_transform, RID)
 	FUNC1RC(TypedArray<RID>, scenario_get_instances, RID) 
 
+	FUNC1RC(bool, instance_get_last_mesh_visible, RID) 
+	
 #undef server_name
 #undef ServerName
 //from now on, calls forwarded to this singleton

@@ -3296,6 +3296,8 @@ void RenderingServer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("instance_get_data","instance" ), &RenderingServer::instance_get_data); 
 	ClassDB::bind_method(D_METHOD("instance_get_transform","instance" ), &RenderingServer::instance_get_transform);
 	ClassDB::bind_method(D_METHOD("scenario_get_instances","scenario" ), &RenderingServer::scenario_get_instances);
+	
+	ClassDB::bind_method(D_METHOD("instance_get_last_mesh_visible","instance" ), &RenderingServer::instance_get_last_mesh_visible);
 	//
 
 

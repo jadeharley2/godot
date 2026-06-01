@@ -796,6 +796,14 @@ void RendererSceneCull::instance_clone_data(RID p_instance_from, RID p_instance_
 	_instance_sync_data(instance_from,instance_to);
 }
 	
+bool RendererSceneCull::instance_get_last_mesh_visible(RID p_instance) const {
+	Instance *instance = instance_owner.get_or_null(p_instance);
+	if(instance==nullptr) return false;
+	if(instance->array_index<0) return false;
+	bool value = instance->scenario->instance_data[instance->array_index].last_mesh_visible;
+	return value;
+}
+
 
 //custom end
 
@@ -3318,6 +3326,8 @@ void RendererSceneCull::_scene_cull(CullData &cull_data, InstanceCullResult &cul
 			}
 		}
 
+		cull_data.scenario->instance_data[i].last_mesh_visible = mesh_visible;
+	
 		if (mesh_visible && cull_data.scenario->instance_data[i].flags & InstanceData::FLAG_USES_MESH_INSTANCE) {
 			cull_result.mesh_instances.push_back(cull_data.scenario->instance_data[i].instance->mesh_instance);
 		}

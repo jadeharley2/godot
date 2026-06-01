@@ -295,6 +295,7 @@ public:
 		// This creates a delay for occlusion culling, which prevents flickering
 		// when jittering the raster occlusion projection.
 		uint64_t occlusion_timeout = 0;
+		bool last_mesh_visible = false;
 	};
 
 	struct InstanceVisibilityData {
@@ -1058,6 +1059,7 @@ public:
 	virtual TypedArray<RID> scenario_get_instances(RID p_scenario) const;
 
 	virtual	void instance_clone_data(RID p_instance_from, RID p_instance_to);
+	virtual	bool instance_get_last_mesh_visible(RID p_instance) const;
 	
 
 	virtual void instance_set_base(RID p_instance, RID p_base);
