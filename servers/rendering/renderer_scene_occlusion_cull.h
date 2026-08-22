@@ -79,6 +79,9 @@ public:
 			Vector2 rect_min = Vector2(FLT_MAX, FLT_MAX);
 			Vector2 rect_max = Vector2(FLT_MIN, FLT_MIN);
 
+			//custom
+			//Vector3 view_corners[8];
+
 			for (int j = 0; j < 8; j++) {
 				// Bitmask to cycle through the corners of the AABB.
 				Vector3 corner = Vector3(
@@ -103,6 +106,9 @@ public:
 				Vector2 normalized = Vector2(projected.x * 0.5f + 0.5f, projected.y * 0.5f + 0.5f);
 				rect_min = rect_min.min(normalized);
 				rect_max = rect_max.max(normalized);
+
+				//custom
+				//view_corners[j] = Vector3(normalized.x,normalized.y,-view.z);
 			}
 
 			rect_max = rect_max.minf(1);
@@ -114,6 +120,9 @@ public:
 			float size = MAX(screen_diagonal.x, screen_diagonal.y);
 			float l = Math::ceil(Math::log2(size));
 			int lod = CLAMP(l, 0, mip_count - 1);
+
+			//custom 
+			//return _is_occluded_box( p_bounds, p_cam_position, lod, rect_min, rect_max, view_corners);
 
 			const int max_samples = 512;
 			int sample_count = 0;
@@ -156,6 +165,118 @@ public:
 
 			return !visible;
 		}
+
+		//custom
+		_FORCE_INLINE_ bool _is_occluded_box(const real_t p_bounds[6],const Vector3 &p_cam_position, int lod,
+			const Vector2 &rect_min,const Vector2 &rect_max, const Vector3 view_corners[8])const{
+
+			int plane_mask=0;
+			
+			if		(p_cam_position.x < p_bounds[0]) plane_mask|=1;
+			else if	(p_cam_position.x > p_bounds[3]) plane_mask|=2;
+
+			if 		(p_cam_position.y < p_bounds[1]) plane_mask|=4;
+			else if (p_cam_position.y > p_bounds[4]) plane_mask|=8;
+
+			if 		(p_cam_position.z < p_bounds[2]) plane_mask|=16;
+			else if (p_cam_position.z > p_bounds[5]) plane_mask|=32;
+			
+			const int max_samples = 512;
+			int sample_count = 0;
+			//bool visible = true;
+
+			for (; lod >= 0; lod--) {
+				int w = sizes[lod].x;
+				int h = sizes[lod].y;
+
+				int minx = CLAMP(rect_min.x * w - 1, 0, w - 1);
+				int maxx = CLAMP(rect_max.x * w + 1, 0, w - 1);
+
+				int miny = CLAMP(rect_min.y * h - 1, 0, h - 1);
+				int maxy = CLAMP(rect_max.y * h + 1, 0, h - 1);
+
+				sample_count += (maxx - minx + 1) * (maxy - miny + 1);
+
+				if (sample_count > max_samples) {
+					return false;
+				}
+
+				Vector3 sz = Vector3(w,h,1);
+				Vector2 sz2= Vector2(w,h);
+				
+				if(plane_mask&1){
+					if(	  _draw_triangle(view_corners[6]*sz,view_corners[5]*sz,view_corners[4]*sz,sz2,lod)
+						||_draw_triangle(view_corners[6]*sz,view_corners[5]*sz,view_corners[7]*sz,sz2,lod))
+						return false;
+				}
+				if(plane_mask&2){
+					if(	  _draw_triangle(view_corners[2]*sz,view_corners[1]*sz,view_corners[0]*sz,sz2,lod)
+						||_draw_triangle(view_corners[2]*sz,view_corners[1]*sz,view_corners[3]*sz,sz2,lod))
+						return false;
+				}
+
+				if(plane_mask&4){
+					if(	  _draw_triangle(view_corners[7]*sz,view_corners[2]*sz,view_corners[3]*sz,sz2,lod)
+						||_draw_triangle(view_corners[7]*sz,view_corners[2]*sz,view_corners[6]*sz,sz2,lod))
+						return false;
+				}
+				if(plane_mask&8){
+					if(	  _draw_triangle(view_corners[0]*sz,view_corners[5]*sz,view_corners[4]*sz,sz2,lod)
+						||_draw_triangle(view_corners[0]*sz,view_corners[5]*sz,view_corners[1]*sz,sz2,lod))
+						return false;
+				}
+
+				if(plane_mask&16){
+					if(	  _draw_triangle(view_corners[5]*sz,view_corners[3]*sz,view_corners[1]*sz,sz2,lod)
+						||_draw_triangle(view_corners[5]*sz,view_corners[3]*sz,view_corners[7]*sz,sz2,lod))
+						return false;
+				}
+				if(plane_mask&32){
+					if(	  _draw_triangle(view_corners[4]*sz,view_corners[2]*sz,view_corners[6]*sz,sz2,lod)
+						||_draw_triangle(view_corners[4]*sz,view_corners[2]*sz,view_corners[0]*sz,sz2,lod))
+						return false;
+				}
+			}
+			return true;
+		}
+		_FORCE_INLINE_ bool _draw_triangle(const Vector3 &p1,const Vector3 &p2, const Vector3 &p3, const Vector2 &sz, const int &lod)const{
+			Vector2 d1 = Vector2(p1.x,p1.y);
+			Vector2 d2 = Vector2(p2.x,p2.y);
+			Vector2 d3 = Vector2(p3.x,p3.y);
+			
+			Vector2 min = d1.min(d2).min(d3).maxf(0.0f);
+			Vector2 max = d1.max(d2).max(d3).min(sz);
+			int w = sz.x;
+			for (int x = min.x; x < max.x; x++) { 
+				for (int y = min.y; y < max.y; y++) { 
+					Vector3 bar = _get_barycentric_2d(Vector2(x,y),d1,d2,d3);
+					if (bar.x>0 && bar.y>0 && bar.z>0){
+						float depth = mips[lod][y * w + x];
+						float cdepth = p1.z*bar.x+p2.z*bar.y+p3.z*bar.z;
+						if(depth>cdepth){
+							return true;//is visible
+						}
+					}
+				}
+			}
+			return false;
+		}
+		_FORCE_INLINE_ Vector3 _get_barycentric_2d(const Vector2 &p, const Vector2 &a, const Vector2 &b, const Vector2 &c)const{
+			Vector2 v0 = b-a;
+			Vector2 v1 = c-a;
+			Vector2 v2 = p-a;
+			float d00 = v0.dot(v0);
+			float d01 = v0.dot(v1);
+			float d11 = v1.dot(v1);
+			float d20 = v2.dot(v0);
+			float d21 = v2.dot(v1);
+			float denom = d00*d11-d01*d01;
+			if(abs(denom)<0.000001f) return Vector3(-1.0f,-1.0f,-1.0f);
+			float v = (d11*d20-d01*d21)/denom;
+			float w = (d00*d21-d01*d20)/denom;
+			return Vector3(1.0f-v-w,v,w);
+		}
+		//custom end
 
 	public:
 		static bool occlusion_jitter_enabled;
