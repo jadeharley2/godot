@@ -269,12 +269,13 @@ public:
 			FLAG_USES_MESH_INSTANCE = (1 << 17),
 			FLAG_REFLECTION_PROBE_DIRTY = (1 << 18),
 			FLAG_IGNORE_OCCLUSION_CULLING = (1 << 19),
-			FLAG_VISIBILITY_DEPENDENCY_NEEDS_CHECK = (3 << 20), // 2 bits, overlaps with the other vis. dependency flags
+			FLAG_VISIBILITY_DEPENDENCY_NEEDS_CHECK = (7 << 20), // 3 bits, overlaps with the other vis. dependency flags
 			FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE = (1 << 20),
-			FLAG_VISIBILITY_DEPENDENCY_HIDDEN = (1 << 21),
-			FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN = (1 << 22),
-			FLAG_GEOM_PROJECTOR_SOFTSHADOW_DIRTY = (1 << 23),
-			FLAG_IGNORE_ALL_CULLING = (1 << 24),
+			FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE = (1 << 21),
+			FLAG_VISIBILITY_DEPENDENCY_HIDDEN = (1 << 22),
+			FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN = (1 << 23),
+			FLAG_GEOM_PROJECTOR_SOFTSHADOW_DIRTY = (1 << 24),
+			FLAG_IGNORE_ALL_CULLING = (1 << 25),
 		};
 
 		uint32_t flags = 0;
@@ -309,6 +310,7 @@ public:
 		float range_begin_margin = 0.0f;
 		float range_end_margin = 0.0f;
 		float children_fade_alpha = 1.0f;
+		bool invert_visibility_parent_logic = false;
 	};
 
 	class VisibilityArray : public BinSortedArray<InstanceVisibilityData> {
@@ -479,6 +481,7 @@ public:
 		float visibility_range_end = 0.0f;
 		float visibility_range_begin_margin = 0.0f;
 		float visibility_range_end_margin = 0.0f;
+		bool invert_visibility_parent_logic = false;
 		RS::VisibilityRangeFadeMode visibility_range_fade_mode = RS::VISIBILITY_RANGE_FADE_DISABLED;
 		Instance *visibility_parent = nullptr;
 		HashSet<Instance *> visibility_dependencies;
@@ -1082,6 +1085,7 @@ public:
 	virtual void instance_set_extra_visibility_margin(RID p_instance, real_t p_margin);
 
 	virtual void instance_set_visibility_parent(RID p_instance, RID p_parent_instance);
+	virtual void instance_set_visibility_parent_logic(RID p_instance, bool invert);
 
 	virtual void instance_set_ignore_culling(RID p_instance, bool p_enabled);
 

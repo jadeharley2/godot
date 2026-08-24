@@ -115,6 +115,7 @@ public:
 
 	virtual void instance_set_extra_visibility_margin(RID p_instance, real_t p_margin) = 0;
 	virtual void instance_set_visibility_parent(RID p_instance, RID p_parent_instance) = 0;
+	virtual void instance_set_visibility_parent_logic(RID p_instance, bool invert) = 0;
 
 	virtual void instance_set_ignore_culling(RID p_instance, bool p_enabled) = 0;
 

@@ -127,6 +127,7 @@ private:
 	float visibility_range_end = 0.0;
 	float visibility_range_begin_margin = 0.0;
 	float visibility_range_end_margin = 0.0;
+	bool visibility_parent_logic = false;
 	VisibilityRangeFadeMode visibility_range_fade_mode = VISIBILITY_RANGE_FADE_DISABLED;
 
 	float transparency = 0.0f;
@@ -173,6 +174,9 @@ public:
 
 	void set_visibility_range_fade_mode(VisibilityRangeFadeMode p_mode);
 	VisibilityRangeFadeMode get_visibility_range_fade_mode() const;
+
+	void set_visibility_parent_logic(bool invert);
+	float get_visibility_parent_logic() const;
 
 	void set_material_override(const Ref<Material> &p_material);
 	Ref<Material> get_material_override() const;

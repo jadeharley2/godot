@@ -1627,6 +1627,13 @@ void RendererSceneCull::instance_geometry_set_visibility_range(RID p_instance, f
 		vd.fade_mode = p_fade_mode;
 	}
 }
+void RendererSceneCull::instance_set_visibility_parent_logic(RID p_instance, bool invert){
+	Instance *instance = instance_owner.get_or_null(p_instance);
+	ERR_FAIL_NULL(instance);
+	instance->invert_visibility_parent_logic = invert;
+
+	_update_instance_visibility_dependencies(instance);
+}
 
 void RendererSceneCull::instance_set_visibility_parent(RID p_instance, RID p_parent_instance) {
 	Instance *instance = instance_owner.get_or_null(p_instance);
@@ -1706,6 +1713,7 @@ void RendererSceneCull::_update_instance_visibility_dependencies(Instance *p_ins
 		vd.range_end = p_instance->visibility_range_end;
 		vd.range_begin_margin = p_instance->visibility_range_begin_margin;
 		vd.range_end_margin = p_instance->visibility_range_end_margin;
+		vd.invert_visibility_parent_logic = p_instance->invert_visibility_parent_logic;
 		vd.position = p_instance->transformed_aabb.get_center();
 		vd.array_index = p_instance->array_index;
 		vd.fade_mode = p_instance->visibility_range_fade_mode;
@@ -2966,26 +2974,40 @@ void RendererSceneCull::_visibility_cull(const VisibilityCullData &cull_data, ui
 		if (idata.parent_array_index >= 0) {
 			uint32_t parent_flags = scenario->instance_data[idata.parent_array_index].flags;
 
-			if ((parent_flags & InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN) || !(parent_flags & (InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE | InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN))) {
-				idata.flags |= InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN;
-				idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE;
-				idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN;
-				continue;
+			if(vd.invert_visibility_parent_logic){
+				if ((parent_flags & InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN) || !(parent_flags & (InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE | InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN))) {
+					idata.flags |= InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN;
+					idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE;
+					idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE;
+					idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN;
+					continue;
+				}
+			}else{
+				if ((parent_flags & InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN) || !(parent_flags & (InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE | InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN))) {
+					idata.flags |= InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN;
+					idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE;
+					idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE;
+					idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN;
+					continue;
+				}
 			}
 		}
 
 		int range_check = _visibility_range_check<true>(vd, cull_data.camera_position, cull_data.viewport_mask);
 
 		if (range_check == -1) {
-			idata.flags |= InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN;
+			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN;
+			idata.flags |= InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE;
 			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE;
 			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN;
 		} else if (range_check == 1) {
 			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN;
+			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE;
 			idata.flags |= InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE;
 			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN;
 		} else {
 			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN;
+			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE;
 			idata.flags &= ~InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE;
 			if (range_check == 2) {
 				idata.flags |= InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN;
@@ -3042,7 +3064,10 @@ bool RendererSceneCull::_visibility_parent_check(const CullData &p_cull_data, co
 		return true;
 	}
 	const uint32_t &parent_flags = p_cull_data.scenario->instance_data[p_instance_data.parent_array_index].flags;
-	return ((parent_flags & InstanceData::FLAG_VISIBILITY_DEPENDENCY_NEEDS_CHECK) == InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE) || (parent_flags & InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN);
+	//custom: use both near and far hide flags
+	return ((parent_flags & InstanceData::FLAG_VISIBILITY_DEPENDENCY_NEEDS_CHECK) == InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE 
+		||(parent_flags & InstanceData::FLAG_VISIBILITY_DEPENDENCY_NEEDS_CHECK) == InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE )
+		|| (parent_flags & InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN);
 }
 
 void RendererSceneCull::_scene_cull_threaded(uint32_t p_thread, CullData *cull_data) {
@@ -3071,10 +3096,11 @@ void RendererSceneCull::_scene_cull(CullData &cull_data, InstanceCullResult &cul
 		bool mesh_visible = false;
 
 		InstanceData &idata = cull_data.scenario->instance_data[i];
-		uint32_t visibility_flags = idata.flags & (InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE | InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN | InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN);
+		uint32_t visibility_flags = idata.flags & (InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE |
+			InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE | InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN | InstanceData::FLAG_VISIBILITY_DEPENDENCY_FADE_CHILDREN);
 		int32_t visibility_check = -1;
 
-#define HIDDEN_BY_VISIBILITY_CHECKS (visibility_flags == InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE || visibility_flags == InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN)
+#define HIDDEN_BY_VISIBILITY_CHECKS (visibility_flags == InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_CLOSE_RANGE ||visibility_flags == InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN_FAR_RANGE || visibility_flags == InstanceData::FLAG_VISIBILITY_DEPENDENCY_HIDDEN)
 #define LAYER_CHECK (cull_data.visible_layers & idata.layer_mask)
 #define IN_FRUSTUM(f) (cull_data.scenario->instance_aabbs[i].in_frustum(f))
 #define VIS_RANGE_CHECK ((idata.visibility_index == -1) || _visibility_range_check<false>(cull_data.scenario->instance_visibility[idata.visibility_index], cull_data.cam_transform.origin, cull_data.visibility_viewport_mask) == 0)
