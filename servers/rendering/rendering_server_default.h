@@ -954,6 +954,7 @@ public:
 
 	FUNC2(instance_set_extra_visibility_margin, RID, real_t)
 	FUNC2(instance_set_visibility_parent, RID, RID)
+	FUNC2(instance_set_visibility_parent_logic, RID, bool)
 
 	FUNC2(instance_set_ignore_culling, RID, bool)
 

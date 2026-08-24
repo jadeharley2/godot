@@ -249,6 +249,15 @@ float GeometryInstance3D::get_transparency() const {
 	return transparency;
 }
 
+void GeometryInstance3D::set_visibility_parent_logic(bool invert) {
+	visibility_parent_logic = invert;
+	RS::get_singleton()->instance_set_visibility_parent_logic(get_instance(), visibility_parent_logic); 
+}
+
+float GeometryInstance3D::get_visibility_parent_logic() const {
+	return visibility_parent_logic;
+}
+
 void GeometryInstance3D::set_visibility_range_begin(float p_dist) {
 	visibility_range_begin = p_dist;
 	RS::get_singleton()->instance_geometry_set_visibility_range(get_instance(), visibility_range_begin, visibility_range_end, visibility_range_begin_margin, visibility_range_end_margin, (RSE::VisibilityRangeFadeMode)visibility_range_fade_mode);
@@ -572,6 +581,9 @@ void GeometryInstance3D::_bind_methods() {
 
 	ClassDB::bind_method(D_METHOD("set_visibility_range_begin", "distance"), &GeometryInstance3D::set_visibility_range_begin);
 	ClassDB::bind_method(D_METHOD("get_visibility_range_begin"), &GeometryInstance3D::get_visibility_range_begin);
+	
+	ClassDB::bind_method(D_METHOD("set_visibility_parent_logic", "invert"), &GeometryInstance3D::set_visibility_parent_logic);
+	ClassDB::bind_method(D_METHOD("get_visibility_parent_logic"), &GeometryInstance3D::get_visibility_parent_logic);
 
 	ClassDB::bind_method(D_METHOD("set_visibility_range_fade_mode", "mode"), &GeometryInstance3D::set_visibility_range_fade_mode);
 	ClassDB::bind_method(D_METHOD("get_visibility_range_fade_mode"), &GeometryInstance3D::get_visibility_range_fade_mode);
@@ -624,6 +636,7 @@ void GeometryInstance3D::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "visibility_range_end", PROPERTY_HINT_RANGE, "0.0,4096.0,0.01,or_greater,suffix:m"), "set_visibility_range_end", "get_visibility_range_end");
 	ADD_PROPERTY(PropertyInfo(Variant::FLOAT, "visibility_range_end_margin", PROPERTY_HINT_RANGE, "0.0,4096.0,0.01,or_greater,suffix:m"), "set_visibility_range_end_margin", "get_visibility_range_end_margin");
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "visibility_range_fade_mode", PROPERTY_HINT_ENUM, "Disabled,Self,Dependencies"), "set_visibility_range_fade_mode", "get_visibility_range_fade_mode");
+	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "visibility_parent_logic"), "set_visibility_parent_logic", "get_visibility_parent_logic");
 
 	BIND_ENUM_CONSTANT(SHADOW_CASTING_SETTING_OFF);
 	BIND_ENUM_CONSTANT(SHADOW_CASTING_SETTING_ON);
