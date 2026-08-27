@@ -1085,12 +1085,12 @@ void GDScript::_bind_methods() {
 
 }
 
-Array GDScript::get_instances() {
-	Array r;
-	SelfList<GDScriptInstance> *obj = instances.first();
-	while (obj) { 
-		r.push_back(obj->self());
-		obj = obj->next();
+Array GDScript::get_instances() const {
+	Array r; 
+	for (const SelfList<GDScriptInstance> *E = instances.first(); E; E = E->next()) {
+		if (E->self() && E->self()->get_owner()) {
+			r.push_back(E->self()->get_owner());
+		}
 	}
 	return r;
 }
