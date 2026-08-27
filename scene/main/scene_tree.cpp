@@ -1815,7 +1815,7 @@ TypedArray<StringName> SceneTree::_get_groups() {
 	ret.resize(group_map.size());
 
 	int i = 0;
-	for (const KeyValue<StringName, SceneTree::Group> &item : group_map)
+	for (const KeyValue<StringName, SceneTreeGroup> &item : group_map)
 	{
 		ret[i] = item.key;
 		i++;
@@ -1824,7 +1824,7 @@ TypedArray<StringName> SceneTree::_get_groups() {
 	return ret;
 }
 
-Ref<MultiplayerAPI> SceneTree::get_multiplayer(const NodePath &p_for_path) const {
+RequiredResult<MultiplayerAPI> SceneTree::get_multiplayer(const NodePath &p_for_path) const {
 	ERR_FAIL_COND_V_MSG(!Thread::is_main_thread(), Ref<MultiplayerAPI>(), "Multiplayer can only be manipulated from the main thread.");
 	if (p_for_path.is_empty()) {
 		return multiplayer;

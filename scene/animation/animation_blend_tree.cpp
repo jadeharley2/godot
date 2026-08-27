@@ -1033,7 +1033,7 @@ bool AnimationNodeStack::_get(const StringName &p_path, Variant &r_ret) const {
 	return true;
 }
 
-void AnimationNodeStack::get_parameter_list(List<PropertyInfo> *r_list) const {
+void AnimationNodeStack::get_parameter_list(LocalVector<PropertyInfo> *r_list) const {
 	AnimationNode::get_parameter_list(r_list); 
 }
 
@@ -1102,7 +1102,7 @@ bool AnimationNodeStack::get_input_additive(int p_input) const{
 }
 
 
-AnimationNode::NodeTimeInfo AnimationNodeStack::_process(const AnimationMixer::PlaybackInfo p_playback_info, bool p_test_only) {
+AnimationNode::NodeTimeInfo AnimationNodeStack::_process(ProcessState &p_process_state, AnimationNodeInstance &p_instance, const AnimationMixer::PlaybackInfo &p_playback_info, bool p_test_only) {
 	if(get_input_count()==0){
 		return NodeTimeInfo();
 	}
@@ -1112,10 +1112,10 @@ AnimationNode::NodeTimeInfo AnimationNodeStack::_process(const AnimationMixer::P
 	for (int i = 0; i < get_input_count(); i++) {
 		pi.weight = 1.0;
 		if(i==0){
-			nti = blend_input(i, pi, FILTER_IGNORE, sync, p_test_only);
+			nti = blend_input(p_process_state, p_instance, i, pi, FILTER_IGNORE, sync, p_test_only);
 		}
 		else{
-			nti = blend_input(i, pi, FILTER_STOP, sync, p_test_only);
+			nti = blend_input(p_process_state, p_instance, i, pi, FILTER_STOP, sync, p_test_only);
 		}
 	} 
 
@@ -1613,20 +1613,20 @@ AnimationNode::NodeTimeInfo AnimationNodeTransition::_process(ProcessState &p_pr
 		pi = p_playback_info;
 		pi.seeked &= use_blend;
 		pi.weight = blend;
-		NodeTimeInfo prev_nti = blend_input(cur_prev_index, pi, FILTER_IGNORE, true, p_test_only);
+		NodeTimeInfo prev_nti = blend_input(p_process_state, p_instance, cur_prev_index, pi, FILTER_IGNORE, true, p_test_only);
 		if (!p_seek) {
 			if(input_data[cur_prev_index].await_end && Animation::is_greater_approx(prev_nti.get_remain(),xfade_time)) {
 				// wait for previous input to end before fading  
 				if (xfade_time > 0) {
 					cur_prev_xfading = xfade_time;
-					set_parameter(prev_xfading, cur_prev_xfading);
+					p_instance.set_parameter_prev_xfading(cur_prev_xfading, p_process_state.is_testing); 
 					return prev_nti;
 				}
 			} 
 			else 
 			{
-				if (Animation::is_less_or_equal_approx(cur_prev_xfading, 0)) {
-					set_parameter(prev_index, -1);
+				if (Animation::is_less_or_equal_approx(cur_prev_xfading, 0)) { 
+					p_instance.set_parameter_prev_index(-1, p_process_state.is_testing);
 				} 
 				cur_prev_xfading -= Math::abs(p_playback_info.delta);
 			} 

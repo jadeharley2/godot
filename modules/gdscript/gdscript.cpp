@@ -1087,9 +1087,10 @@ void GDScript::_bind_methods() {
 
 Array GDScript::get_instances() {
 	Array r;
-	for (auto &&obj : instances)
-	{ 
-		r.push_back(obj);
+	SelfList<GDScriptInstance> *obj = instances.first();
+	while (obj) { 
+		r.push_back(obj->self());
+		obj = obj->next();
 	}
 	return r;
 }

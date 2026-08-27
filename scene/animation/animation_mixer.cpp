@@ -2137,6 +2137,8 @@ AnimationMixer::PlaybackInfo::operator Dictionary() const {
 	d["start"] = start; 
 	d["end"] = end; 
 	d["seeked"] = seeked; 
+	d["is_external_seeking"] = is_external_seeking; 
+	d["looped_flag"] = (int)looped_flag; 
 	d["weight"] = weight; 
 	d["track_weights"] = track_weights; 
 	return d;
@@ -2149,8 +2151,16 @@ AnimationMixer::PlaybackInfo AnimationMixer::PlaybackInfo::from_dict(const Dicti
 	if(p_dict.has("start")) 	pi.start = 	p_dict["start"]; 
 	if(p_dict.has("end")) 		pi.end = 	p_dict["end"]; 
 	if(p_dict.has("seeked")) 	pi.seeked = p_dict["seeked"]; 
+	if (p_dict.has("is_external_seeking")) 	pi.is_external_seeking = p_dict["is_external_seeking"];
+    if (p_dict.has("looped_flag")) pi.looped_flag = (Animation::LoopedFlag)(int)p_dict["looped_flag"]; 
 	if(p_dict.has("weight")) 	pi.weight = p_dict["weight"]; 
-	if(p_dict.has("track_weights")) pi.track_weights = p_dict["track_weights"];   
+	if(p_dict.has("track_weights")){
+		Array arr = p_dict["track_weights"];
+        pi.track_weights = memnew(LocalVector<real_t>); 
+        for (int i = 0; i < arr.size(); i++) {
+            pi.track_weights->push_back(arr[i]);
+        }
+	} 
 	return pi;
 }
 
@@ -2158,13 +2168,13 @@ AnimationMixer::PlaybackInfo AnimationMixer::PlaybackInfo::from_dict(const Dicti
 int AnimationMixer::_add_animation_instance(const StringName &p_name, const Dictionary p_playback_info) {
 	//ERR_FAIL_COND(!has_animation(p_name));
 
-	AnimationData ad;
-	ad.name = p_name;
-	ad.animation = get_animation(p_name);
-	ad.animation_library = find_animation_library(ad.animation);
+	//AnimationData ad; 
+	//ad.animation = get_animation(p_name);
+	//ad.animation_library = find_animation_library(ad.animation);
 
 	AnimationInstance ai;
-	ai.animation_data = ad;
+	//ai.animation_data = ad;
+	ai.animation = get_animation(p_name);
 	ai.playback_info = PlaybackInfo::from_dict(p_playback_info);
 
 	int idx = animation_instances.size();
@@ -2174,10 +2184,9 @@ int AnimationMixer::_add_animation_instance(const StringName &p_name, const Dict
 Dictionary AnimationMixer::_get_animation_instance(int id) const{
 	if(id<0||id>=(int)animation_instances.size()) return Variant();
 	AnimationInstance ai = animation_instances[id];
-	Dictionary d =Dictionary( ai.playback_info);
-	d["name"] = ai.animation_data.name;
-	d["animation"] = ai.animation_data.animation;
-	d["animation_library"] = ai.animation_data.animation_library;
+	Dictionary d =Dictionary( ai.playback_info); 
+	d["animation"] = find_animation(ai.animation);
+	//d["animation_library"] = ai.animation_data.animation_library;
 	return d; 
 }
 

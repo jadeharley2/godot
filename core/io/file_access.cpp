@@ -1176,9 +1176,3 @@ FileAccess::~FileAccess() {
 
 
 
-
-
-void FileAccessHandler::_bind_methods() { 
-	GDVIRTUAL_BIND(_exists, "path");
-	GDVIRTUAL_BIND(_open, "path", "mode_flags");
-}

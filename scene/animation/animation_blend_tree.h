@@ -344,7 +344,7 @@ protected:
 	void _get_property_list(List<PropertyInfo> *p_list) const;
 	
 public:
-	virtual void get_parameter_list(List<PropertyInfo> *r_list) const override;
+	virtual void get_parameter_list(LocalVector<PropertyInfo> *r_list) const override;
 	virtual Variant get_parameter_default_value(const StringName &p_parameter) const override;
 
 	virtual String get_caption() const override;
@@ -359,7 +359,7 @@ public:
 	void set_input_additive(int p_input, bool is_additive);
 	bool get_input_additive(int p_input) const;
 
-	virtual NodeTimeInfo _process(const AnimationMixer::PlaybackInfo p_playback_info, bool p_test_only = false) override;
+	virtual NodeTimeInfo _process(ProcessState &p_process_state, AnimationNodeInstance &p_instance, const AnimationMixer::PlaybackInfo &p_playback_info, bool p_test_only = false) override;
 
 	AnimationNodeStack();
 };

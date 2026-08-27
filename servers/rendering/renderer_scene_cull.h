@@ -392,8 +392,8 @@ public:
 		Scenario *source_scenario = nullptr;
 		Scenario *target_scenario = nullptr;
 		
-		//RS::InstanceType
-		uint32_t type_filter = RS::INSTANCE_GEOMETRY_MASK | (1<<RS::INSTANCE_LIGHT) | (1<<RS::INSTANCE_DECAL) | (1<<RS::INSTANCE_FOG_VOLUME);
+		//RSE::InstanceType
+		uint32_t type_filter = RSE::INSTANCE_GEOMETRY_MASK | (1<<RSE::INSTANCE_LIGHT) | (1<<RSE::INSTANCE_DECAL) | (1<<RSE::INSTANCE_FOG_VOLUME);
 		uint32_t layer_mask = 1;
 
 		HashMap<Instance *,Instance *> projections;

@@ -15,7 +15,7 @@ class Projector3D : public Node3D {
 	RID projector;
 
 	uint32_t layers = 1;
-	uint32_t types = RS::INSTANCE_GEOMETRY_MASK | (1<<RS::INSTANCE_LIGHT) | (1<<RS::INSTANCE_DECAL) | (1<<RS::INSTANCE_FOG_VOLUME);
+	uint32_t types = RSE::INSTANCE_GEOMETRY_MASK | (1<<RSE::INSTANCE_LIGHT) | (1<<RSE::INSTANCE_DECAL) | (1<<RSE::INSTANCE_FOG_VOLUME);
 
 	RID physics_projector;
 	uint32_t physics_layers = ~0;

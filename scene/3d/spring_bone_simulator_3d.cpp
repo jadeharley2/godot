@@ -1082,7 +1082,7 @@ void SpringBoneSimulator3D::set_joint_inertia(int p_index, int p_joint, float p_
 
 float SpringBoneSimulator3D::get_joint_inertia(int p_index, int p_joint) const {
 	ERR_FAIL_INDEX_V(p_index, (int)settings.size(), 0);
-	const LocalVector<SpringBone3DJointSetting *> joints = settings[p_index]->joints;
+	const LocalVector<SpringBone3DJointSetting *> &joints = settings[p_index]->joints;
 	ERR_FAIL_INDEX_V(p_joint, (int)joints.size(), 0);
 	return joints[p_joint]->inertia;
 }

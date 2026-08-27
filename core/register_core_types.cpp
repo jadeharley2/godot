@@ -89,6 +89,7 @@
 #include "core/string/translation.h"
 #include "core/string/translation_server.h"
 #include "core/io/file_access_memory.h"
+#include "core/io/file_access_handler.h"
 #ifndef DISABLE_DEPRECATED
 #include "core/io/packed_data_container.h"
 #endif
