@@ -33,6 +33,7 @@
 #include "core/object/ref_counted.h"
 #include "core/string/ustring.h"
 #include "core/typedefs.h"
+#include "core/io/file_access_handler.h"
 
 //@ TODO, excellent candidate for THREAD_SAFE MACRO, should go through all these and add THREAD_SAFE where it applies
 class DirAccess : public RefCounted {
@@ -174,4 +175,15 @@ public:
 
 public:
 	virtual ~DirAccess();
+
+
+private:
+	static inline HashMap<StringName,Ref<FileAccessHandler>>_dir_handlers = HashMap<StringName,Ref<FileAccessHandler>>();
+public:
+	static void add_dir_handler(const StringName &key,Ref<FileAccessHandler> handler){
+		_dir_handlers[key] = handler;
+	}
+	static bool remove_dir_handler(const StringName &key){
+		return _dir_handlers.erase(key);
+	}
 };

@@ -135,6 +135,16 @@ Error DirAccess::make_dir_recursive(const String &p_dir) {
 		return OK;
 	}
 
+	 
+	for (auto &&i : _dir_handlers)
+	{
+		Error result = i.value->make_dir(p_dir);
+		if(result!=ERR_SKIP){
+			return result;
+		}  	
+	} 
+	
+
 	String full_dir;
 
 	if (p_dir.is_relative_path()) {
@@ -286,6 +296,13 @@ Error DirAccess::make_dir_recursive_absolute(const String &p_dir) {
 }
 
 bool DirAccess::dir_exists_absolute(const String &p_dir) {
+	for (auto &&i : _dir_handlers)
+	{ 
+		if(i.value->dir_exists(p_dir)){
+			return true;
+		}  	
+	} 
+
 	Ref<DirAccess> d = DirAccess::create_for_path(p_dir);
 	return d->dir_exists(p_dir);
 }
@@ -689,6 +706,10 @@ void DirAccess::_bind_methods() {
 
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "include_navigational"), "set_include_navigational", "get_include_navigational");
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "include_hidden"), "set_include_hidden", "get_include_hidden");
+
+	
+	ClassDB::bind_static_method("DirAccess", D_METHOD("add_dir_handler", "key", "handler"), &DirAccess::add_dir_handler);
+	ClassDB::bind_static_method("DirAccess", D_METHOD("remove_dir_handler", "key"), &DirAccess::remove_dir_handler);
 }
 
 DirAccess::~DirAccess() {
